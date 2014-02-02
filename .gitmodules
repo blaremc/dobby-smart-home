@@ -3,7 +3,7 @@
 	url = http://github.com/kohana/minion.git
 [submodule "htdocs/modules/database"]
 	path = htdocs/modules/database
-	url = http://github.com/kohana/database.git
+	url = https://github.com/blaremc/database.git
 [submodule "htdocs/modules/auth"]
 	path = htdocs/modules/auth
 	url = http://github.com/kohana/auth.git
