@@ -1,18 +1,18 @@
-[submodule "system"]
-	path = system
-	url = http://github.com/kohana/core.git
-[submodule "modules/database"]
-	path = modules/database
-	url = http://github.com/kohana/database.git
-[submodule "modules/image"]
-	path = modules/image
-	url = http://github.com/kohana/image.git
-[submodule "modules/auth"]
-	path = modules/auth
-	url = http://github.com/kohana/auth.git
-[submodule "modules/cache"]
-	path = modules/cache
-	url = http://github.com/kohana/cache.git
-[submodule "modules/minion"]
-	path = modules/minion
+[submodule "htdocs/modules/minion"]
+	path = htdocs/modules/minion
 	url = http://github.com/kohana/minion.git
+[submodule "htdocs/modules/database"]
+	path = htdocs/modules/database
+	url = http://github.com/kohana/database.git
+[submodule "htdocs/modules/auth"]
+	path = htdocs/modules/auth
+	url = http://github.com/kohana/auth.git
+[submodule "htdocs/modules/cache"]
+	path = htdocs/modules/cache
+	url = http://github.com/kohana/cache.git
+[submodule "htdocs/system"]
+	path = htdocs/system
+	url = http://github.com/kohana/core.git
+[submodule "htdocs/modules/image"]
+	path = htdocs/modules/image
+	url = http://github.com/kohana/image.git
