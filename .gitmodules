@@ -1,18 +1,27 @@
+[submodule "htdocs/modules/i18n"]
+	path = htdocs/modules/i18n
+	url = https://github.com/dobby-home/kohana-i18n.git
+[submodule "htdocs/modules/smarty3"]
+	path = htdocs/modules/smarty3
+	url = https://github.com/dobby-home/kohana-smarty3.git
+[submodule "htdocs/modules/message"]
+	path = htdocs/modules/message
+	url = https://github.com/dobby-home/kohana-message.git
+[submodule "htdocs/modules_dobby/driver_arduino"]
+	path = htdocs/modules_dobby/driver_arduino
+	url = https://github.com/dobby-home/driver-arduino.git
 [submodule "htdocs/modules/minion"]
 	path = htdocs/modules/minion
-	url = http://github.com/kohana/minion.git
+	url = https://github.com/dobby-home/kohana-minion.git
 [submodule "htdocs/modules/database"]
 	path = htdocs/modules/database
-	url = https://github.com/blaremc/database.git
-[submodule "htdocs/modules/auth"]
-	path = htdocs/modules/auth
-	url = http://github.com/kohana/auth.git
+	url = https://github.com/dobby-home/kohana-database.git
 [submodule "htdocs/modules/cache"]
 	path = htdocs/modules/cache
-	url = http://github.com/kohana/cache.git
-[submodule "htdocs/system"]
-	path = htdocs/system
-	url = http://github.com/kohana/core.git
+	url = https://github.com/dobby-home/kohana-cache.git
 [submodule "htdocs/modules/image"]
 	path = htdocs/modules/image
-	url = http://github.com/kohana/image.git
+	url = https://github.com/dobby-home/kohana-image.git
+[submodule "htdocs/system"]
+	path = htdocs/system
+	url = https://github.com/dobby-home/kohana-core.git

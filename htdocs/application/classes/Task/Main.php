@@ -9,6 +9,12 @@ class Task_Main extends Minion_Task  {
 
     protected function _execute ( array $params )
     {
+        $ports = Database::instance()->prepare('SELECT * FROM monitored_ports')->execute()->fetchAll();
+        foreach ($ports as $port){
+
+            $value = Dobby_Driver::factory($port['driver'])->getValue($port['address']);
+            Minion_CLI::write($port['address'].' '. $value."\n");
+        }
 
     }
 }

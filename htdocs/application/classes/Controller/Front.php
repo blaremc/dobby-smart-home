@@ -1,10 +1,6 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
-
-class Dobby_Loop
-{
+class Controller_Front extends Controller_Smarty {
 
 
-
-    
 }

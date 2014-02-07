@@ -69,8 +69,8 @@ if (!is_dir($application) AND is_dir(MAINROOT . $application))
 if (!is_dir($modules) AND is_dir(MAINROOT . $modules))
     $modules = MAINROOT . $modules;
 
-if (!is_dir($modules_dobby) AND is_dir(MAINROOT . $modules))
-    $modules_dobby = MAINROOT . $modules;
+if (!is_dir($modules_dobby) AND is_dir(MAINROOT . $modules_dobby))
+    $modules_dobby = MAINROOT . $modules_dobby;
 
 if (!is_dir($system) AND is_dir(MAINROOT . $system))
     $system = MAINROOT . $system;
