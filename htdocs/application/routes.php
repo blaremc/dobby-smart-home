@@ -16,6 +16,13 @@ Route::set('login', 'login')
         'directory' => 'Front',
     ));
 
+Route::set('ajax', 'ajax(/<controller>(/<action>))')
+    ->defaults(array(
+        'controller' => 'index',
+        'action' => 'index',
+        'directory' => 'Ajax',
+    ));
+
 Route::set('default', '(<controller>(/<action>))')
     ->defaults(array(
         'controller' => 'index',

@@ -1,0 +1,19 @@
+html, body{
+    font-family: "Segoe UI";
+    background: #333;
+
+    color: #ddd;
+}
+.well {
+    background-color: #666;
+    background-image: linear-gradient(to bottom, #333 0%, #222 100%);
+}
+
+.form-control {
+    background-color: #eee;
+}
+
+.form-control::-moz-placeholder {
+    color: #333;
+    opacity: 1;
+}

@@ -1,21 +1,21 @@
 {extends "front/template/index.tpl"}
 {block "content"}
     <div class="container">
-        <h1>Добро пожалвать </h1>
+        <h3 class="text-center">{__('welcome login form')}</h3>
         <div class="row">
             <div class="col-md-6 col-md-offset-3">
                 <div class="well">
-                    <form role="form" action="#">
+                    <form role="form" action="#" class="app-login">
                         <div class="form-group">
-                            <label for="exampleInputEmail1">Email address</label>
-                            <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Enter email">
+                            <label for="exampleInputEmail1">{__('email or login')}</label>
+                            <input name="login_email" class="form-control required ilogin_email" placeholder="{__('enter email or login')}">
                         </div>
                         <div class="form-group">
-                            <label for="exampleInputPassword1">Password</label>
-                            <input type="password" class="form-control" id="exampleInputPassword1"
-                                   placeholder="Password">
+                            <label for="exampleInputPassword1">{__('password')}</label>
+                            <input name="pass" type="password" class="required ipass form-control"
+                                   placeholder="{__('enter password')}">
                         </div>
-                        <button type="submit" class="btn btn-default">Submit</button>
+                        <button type="submit" class="btn btn-default">{__('login')}</button>
                     </form>
                 </div>
             </div>

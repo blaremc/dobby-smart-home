@@ -62,10 +62,13 @@ mb_substitute_character('none');
 
 // -- Configuration and initialization -----------------------------------------
 
+Cookie::$salt = '<LIhg9034hCMNBBCSHYA>LMK12ssd';
+Cookie::$expiration = Date::MONTH * 3;
+
 /**
  * Set the default language
  */
-I18n::lang('en-us');
+I18n::lang('ru-ru');
 
 if (isset($_SERVER['SERVER_PROTOCOL'])) {
     // Replace the default protocol.
@@ -125,5 +128,7 @@ Kohana::modules(array( // 'auth'       => MODPATH.'auth',       // Basic authent
     'i18n' => MODPATH . 'i18n', // Smarty3
     'driver_arduino' => MODPATH_DOBBY . 'driver_arduino',
 ));
+
+Dobby::init();
 
 require APPPATH . 'routes' . EXT;

@@ -8,6 +8,10 @@
 class Dobby
 {
 
-  
+
+    public static function init(){
+
+        I18n::lang('ru');
+    }
     
 }

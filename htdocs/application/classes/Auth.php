@@ -66,10 +66,10 @@ class Auth {
     public function login($values, $cookie = true) {
 
         $valid = Validation::factory($values)
-            ->rules('loginemail', Rules::instance()->login_email)
+            ->rules('login_email', Rules::instance()->login_email)
             ->rules('pass', Rules::instance()->pass);
         $valid->check();
-        Message::instance($valid->errors());
+        Message::instance($valid->errors('validation'));
 
         // If exist validation errors then exit
         if (!Message::instance()->isempty()) return false;
@@ -80,7 +80,7 @@ class Auth {
 							FROM users
 							WHERE (lower(login) = lower(:login) OR lower(email) = lower(:login)) AND is_deleted = FALSE')
 
-            ->bindParam(':login', $values['loginemail'])
+            ->bindParam(':login', $values['login_email'])
             ->execute()
             ->fetch();
         $pass = self::generateHash($values['pass'], $user['id_users']);
@@ -118,7 +118,6 @@ class Auth {
         }
 
         $usid = $this->usid != '' ? $this->usid : Cookie::get('usid', '');
-
         if ($usid == '') {
             $this->_data = array();
             return $this->_data;
@@ -171,10 +170,9 @@ class Auth {
 
         $token = sha1(time() . uniqid('V(&#GJC', true));
 
-        Database::instance()->prepare('INSERT INTO tokens(id_tokens, id_users, createdate) VALUES(:token, :id_user, :createdate)')
+        Database::instance()->prepare('INSERT INTO tokens(id_tokens, id_users, createdate) VALUES(:token, :id_user, NOW())')
             ->bindParam(':token', $token)
             ->bindParam(':id_user', $id, PDO::PARAM_INT)
-            ->bindParam(':id_user', date('r'))
             ->execute();
 
         if ($cookie) {
@@ -209,7 +207,7 @@ class Auth {
      * @return string
      */
     public static function generateHash($pass, $login) {
-        return sha1($pass . Cookie::$salt . 'DobbyHASH' . $login);
+        return sha1($pass . Cookie::$salt . 'DobbyHASH$3fscc...545gda' . $login);
     }
 
 }
