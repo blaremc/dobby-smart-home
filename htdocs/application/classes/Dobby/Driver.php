@@ -3,6 +3,7 @@
 
 class Dobby_Driver {
 
+    protected $_timeout = 1;
 
     public static $drivers;
 
@@ -39,7 +40,6 @@ class Dobby_Driver {
      * @return array
      */
     protected function parseAddress($address) {
-        $result = array();
         $parts = explode('://', $address);
         $protocol = $parts[0];
         $parts = explode(':', $parts[1]);

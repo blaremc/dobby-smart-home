@@ -40,19 +40,19 @@ class Auth {
 
         if (!Message::instance()->isempty()) return false;
 
-        $id = Database::instance()->prepare('INSERT INTO users(email, login, pass) VALUES (:email, :login, :pass) RETURNING id_users')
+        $id = Database::instance()->prepare('INSERT INTO users(email, login, pass) VALUES (:email, :login, :pass)')
             ->bindValue(':email', $values['email'])
             ->bindValue(':login', $values['login'])
             ->bindValue(':pass', 'TEMP')
             ->execute()
-            ->fetch();
+            ->lastInsertId();
 
         Database::instance()->prepare('UPDATE users SET pass=:pass WHERE id_users=:user')
-            ->bindValue(':pass', Auth::generateHash($values['pass'], $id[0]))
-            ->bindValue(':user', $id[0], PDO::PARAM_INT)
+            ->bindValue(':pass', Auth::generateHash($values['pass'], $id))
+            ->bindValue(':user', $id, PDO::PARAM_INT)
             ->execute();
 
-        return $id[0];
+        return $id;
     }
 
 
@@ -126,7 +126,7 @@ class Auth {
 				SELECT id_users, login, email, sex, birth, avatar, name, is_admin FROM users
 				  JOIN tokens USING(id_users)
                     WHERE id_tokens = :token AND
-                          is_deleted = false AND
+                          is_deleted = FALSE AND
                           DATE_ADD(tokens.createdate, INTERVAL exp_time_sec SECOND) > NOW()')
             ->bindParam(':token', $usid)
             ->execute()
@@ -198,6 +198,7 @@ class Auth {
         if (!$this->loadData()) return false;
         return $this->_data['is_admin'];
     }
+
     /**
      * Generate hash
      *

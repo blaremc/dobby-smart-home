@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-{block "content"}{/block}
+{block "container"}{/block}
 <script src="/assets/js/jquery-2.0.2.min.js"></script>
 <script src="/assets/js/jquery-migrate-1.0.0.js"></script>
 <script src="/assets/js/jquery.qtip.min.js"></script>

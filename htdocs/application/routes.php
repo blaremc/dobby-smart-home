@@ -1,7 +1,14 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
+Route::set('admin_devices', 'admin/devices(/<action>)(/<id>)', array('action' => 'add', 'id' => '[0-9]+'))
+    ->defaults(array(
+        'controller' => 'Devices',
+        'action' => 'index',
+        'directory' => 'Admin',
+    ));
 
-Route::set('admin', 'admin(/<controller>(/<action>))')
+
+Route::set('admin', 'admin(/<controller>(/<action>(/<id>)))')
     ->defaults(array(
         'controller' => 'Index',
         'action' => 'index',
