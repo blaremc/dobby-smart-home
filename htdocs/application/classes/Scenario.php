@@ -12,6 +12,7 @@ class Scenario {
     public $last_date = null;
     public $is_active = null;
     public $error = null;
+    public $data = array();
 
     protected static $_devices = array();
 
@@ -25,7 +26,7 @@ class Scenario {
         $this->is_active = isset($data['is_active']) ? $data['is_active'] : null;
         $this->error = isset($data['error']) ? $data['error'] : null;
         $this->execute_date = isset($data['execute_date']) ? $data['execute_date'] : null;
-
+        $this->data = isset($data['data']) ? json_decode($data['data'], true) : array();
         $this->_path = APPPATH . 'classes/Scenario/';
     }
 
@@ -97,12 +98,56 @@ class Scenario {
         return $this;
     }
 
+    /**
+     * Create and get user scenario
+     *
+     * @return mixed
+     */
     public function getClass() {
         $class = 'Scenario_' . ucfirst($this->filename);
-        return new $class();
+        return new $class($this);
     }
 
+    /**
+     * Set and save data
+     * @param $name
+     * @param $value
+     */
+    public function setData($name, $value) {
+        $this->data[$name] = $value;
+        $this->_save();
+    }
 
+    /**
+     * Set data as array and save
+     * @param $data
+     */
+    public function setDataArray($data) {
+        $this->data = array_merge($this->data, $data);
+        $this->_save();
+    }
+
+    /**
+     * Clear all data and save
+     */
+    public function clearData(){
+        $this->data = array();
+        $this->_save();
+    }
+
+    /**
+     * @param $name
+     * @return null
+     */
+    public function getData($name) {
+        return empty($this->data[$name]) ? null : $this->data[$name];
+    }
+
+    /**
+     * Save user scenario to file
+     *
+     * @param $code
+     */
     protected function _saveFile($code) {
 
         $code = "<?php defined('SYSPATH') or die('No direct script access.'); // Don't touch this line" . PHP_EOL .
@@ -118,13 +163,14 @@ class Scenario {
 
         if ($this->id_scenarios) {
             return Database::instance()->prepare('UPDATE scenarios SET filename=:filename, is_active=:is_active,
-                                            last_date=NOW(), execute_date = :execute_date, error = :error
+                                            last_date=NOW(), execute_date = :execute_date, error = :error, data=:data
                                            WHERE id_scenarios=:id')
                 ->bindValue(':filename', $this->filename)
                 ->bindValue(':is_active', $this->is_active)
                 ->bindValue(':id', $this->id_scenarios)
                 ->bindValue(':execute_date', $this->execute_date)
                 ->bindValue(':error', $this->error)
+                ->bindValue(':data', json_encode($this->data))
                 ->execute();
         } else {
             $id = Database::instance()->prepare('INSERT INTO scenarios(filename, is_active, create_date)  VALUES(:filename, :is_active, NOW())')

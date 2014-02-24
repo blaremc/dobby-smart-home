@@ -8,6 +8,19 @@ abstract class Dobby_Scenario {
 
 
     /**
+     * @var Scenario
+     */
+    protected $_scenario = null;
+
+
+    /**
+     * @param Scenario $scenario
+     */
+    public function __construct($scenario) {
+        $this->_scenario = $scenario;
+    }
+
+    /**
      * Get device by name or ID
      *
      * @param string|int $name
@@ -21,15 +34,27 @@ abstract class Dobby_Scenario {
     /**
      * Init subscribe event
      */
-    public function init() {}
+    public function init() {
+    }
 
     /**
      * Execute when want user
      */
-    public function execute() {}
+    public function execute() {
+    }
 
     /**
      * Execute when trigger event
      */
-    public function event($event, $device) {}
+    public function event($event, $device) {
+    }
+
+
+    protected function set($name, $value) {
+        $this->_scenario->setData($name, $value);
+    }
+
+    protected function get($name) {
+        return $this->_scenario->getData($name);
+    }
 }
