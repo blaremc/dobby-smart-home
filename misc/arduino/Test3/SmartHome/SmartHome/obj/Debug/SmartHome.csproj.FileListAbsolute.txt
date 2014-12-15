@@ -1,0 +1,14 @@
+D:\!Development\SmartHome\Test3\SmartHome\SmartHome\bin\Debug\SmartHome.exe.config
+D:\!Development\SmartHome\Test3\SmartHome\SmartHome\bin\Debug\SmartHome.exe
+D:\!Development\SmartHome\Test3\SmartHome\SmartHome\bin\Debug\SmartHome.pdb
+D:\!Development\SmartHome\Test3\SmartHome\SmartHome\bin\Debug\CUETools.Codecs.dll
+D:\!Development\SmartHome\Test3\SmartHome\SmartHome\bin\Debug\CUETools.Codecs.FLAKE.dll
+D:\!Development\SmartHome\Test3\SmartHome\SmartHome\bin\Debug\NAudio.dll
+D:\!Development\SmartHome\Test3\SmartHome\SmartHome\bin\Debug\NAudio.WindowsMediaFormat.dll
+D:\!Development\SmartHome\Test3\SmartHome\SmartHome\bin\Debug\NAudio.xml
+D:\!Development\SmartHome\Test3\SmartHome\SmartHome\obj\Debug\SmartHome.csprojResolveAssemblyReference.cache
+D:\!Development\SmartHome\Test3\SmartHome\SmartHome\obj\Debug\SmartHome.Form1.resources
+D:\!Development\SmartHome\Test3\SmartHome\SmartHome\obj\Debug\SmartHome.Properties.Resources.resources
+D:\!Development\SmartHome\Test3\SmartHome\SmartHome\obj\Debug\SmartHome.csproj.GenerateResource.Cache
+D:\!Development\SmartHome\Test3\SmartHome\SmartHome\obj\Debug\SmartHome.exe
+D:\!Development\SmartHome\Test3\SmartHome\SmartHome\obj\Debug\SmartHome.pdb

@@ -1,0 +1,12 @@
+D:\!Development\SmartHome\MultiRoom\MultiRoom\MultiRoom\bin\Debug\MultiRoom.exe.config
+D:\!Development\SmartHome\MultiRoom\MultiRoom\MultiRoom\obj\Debug\MultiRoom.csprojResolveAssemblyReference.cache
+D:\!Development\SmartHome\MultiRoom\MultiRoom\MultiRoom\obj\Debug\MultiRoom.Form1.resources
+D:\!Development\SmartHome\MultiRoom\MultiRoom\MultiRoom\obj\Debug\MultiRoom.Properties.Resources.resources
+D:\!Development\SmartHome\MultiRoom\MultiRoom\MultiRoom\obj\Debug\MultiRoom.csproj.GenerateResource.Cache
+D:\!Development\SmartHome\MultiRoom\MultiRoom\MultiRoom\bin\Debug\MultiRoom.exe
+D:\!Development\SmartHome\MultiRoom\MultiRoom\MultiRoom\bin\Debug\MultiRoom.pdb
+D:\!Development\SmartHome\MultiRoom\MultiRoom\MultiRoom\bin\Debug\NAudio.dll
+D:\!Development\SmartHome\MultiRoom\MultiRoom\MultiRoom\bin\Debug\NAudio.WindowsMediaFormat.dll
+D:\!Development\SmartHome\MultiRoom\MultiRoom\MultiRoom\bin\Debug\NAudio.xml
+D:\!Development\SmartHome\MultiRoom\MultiRoom\MultiRoom\obj\Debug\MultiRoom.exe
+D:\!Development\SmartHome\MultiRoom\MultiRoom\MultiRoom\obj\Debug\MultiRoom.pdb
