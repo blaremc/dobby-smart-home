@@ -1,9 +1,10 @@
-html, body{
+html, body {
     font-family: "Segoe UI";
     background: #333;
 
     color: #ddd;
 }
+
 .well {
     background-color: #666;
     background-image: linear-gradient(to bottom, #333 0%, #222 100%);
@@ -16,4 +17,64 @@ html, body{
 .form-control::-moz-placeholder {
     color: #333;
     opacity: 1;
+}
+
+ul.menu {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+ul.menu li a {
+    display: block;
+    padding: 5px;
+    border-bottom: 2px solid transparent;
+    text-decoration: none;
+}
+
+ul.menu li a:hover {
+    background: #333;
+    border-bottom: 2px solid #444;
+    color: #aaa;
+}
+
+.well {
+    border-radius: 2px;
+    border: 1px solid #444;
+}
+
+.menubar {
+    border-right: 1px solid #444;
+}
+
+.logo {
+    color: #777;
+    text-shadow: 0 0 1px #fff;
+    font-size: 40px;
+}
+
+.actions-block .action {
+    float: left;
+    background: #333;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.actions-block .action a {
+    color: #9DEDB6;
+    font-size: 16px;
+    display: block;
+    padding: 10px;
+    width: 200px;
+    height: 150px;
+    outline: 0;
+    border: 1px solid #555;
+    border-radius: 2px;
+    text-decoration: none;
+}
+
+.actions-block .action a:hover {
+
+    background: #555;
+    border: 1px solid #777;
 }

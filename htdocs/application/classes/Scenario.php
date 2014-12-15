@@ -6,13 +6,13 @@ class Scenario {
     protected $_path = '';
 
     public $id_scenarios = null;
-    public $filename = null;
     public $execute_date = null;
     public $create_date = null;
     public $last_date = null;
     public $is_active = null;
     public $error = null;
     public $data = array();
+    public $name = null;
 
     protected static $_devices = array();
 
@@ -20,7 +20,7 @@ class Scenario {
 
         $data = is_array($data) ? $data : array();
         $this->id_scenarios = isset($data['id_scenarios']) ? $data['id_scenarios'] : null;
-        $this->filename = isset($data['filename']) ? $data['filename'] : null;
+        $this->name = isset($data['name']) ? $data['name'] : null;
         $this->create_date = isset($data['create_date']) ? $data['create_date'] : null;
         $this->last_date = isset($data['last_date']) ? $data['last_date'] : null;
         $this->is_active = isset($data['is_active']) ? $data['is_active'] : null;
@@ -30,6 +30,11 @@ class Scenario {
         $this->_path = APPPATH . 'classes/Scenario/';
     }
 
+    public function execute($data) {
+
+        $scenario = $this->getClass();
+        $scenario->execute($data);
+    }
 
     /**
      * @param $id
@@ -59,12 +64,14 @@ class Scenario {
                 $item = Scenario::factory($item);
             }
             return $value;
+
         } elseif (is_numeric($value)) {
             $device = self::getScenarioById($value);
             if (!$device) {
                 throw new Dobby_Exception_404();
             }
             return new Scenario($device);
+
         } elseif (is_null($value)) {
             return new Scenario(null);
         }
@@ -87,11 +94,10 @@ class Scenario {
 
         if (!Message::instance()->isempty()) return false;
 
-        $this->filename = $values['name'];
+        $this->name = $values['name'];
         $this->is_active = isset($values['is_active']) ? 1 : 0;
 
         if ($this->_save()) {
-
             $this->_saveFile($values['code']);
         }
 
@@ -101,15 +107,16 @@ class Scenario {
     /**
      * Create and get user scenario
      *
-     * @return mixed
+     * @return Dobby_Scenario
      */
     public function getClass() {
-        $class = 'Scenario_' . ucfirst($this->filename);
+        $class = 'Scenario_' . ucfirst($this->name);
         return new $class($this);
     }
 
     /**
      * Set and save data
+     *
      * @param $name
      * @param $value
      */
@@ -120,6 +127,7 @@ class Scenario {
 
     /**
      * Set data as array and save
+     *
      * @param $data
      */
     public function setDataArray($data) {
@@ -130,7 +138,7 @@ class Scenario {
     /**
      * Clear all data and save
      */
-    public function clearData(){
+    public function clearData() {
         $this->data = array();
         $this->_save();
     }
@@ -153,7 +161,7 @@ class Scenario {
         $code = "<?php defined('SYSPATH') or die('No direct script access.'); // Don't touch this line" . PHP_EOL .
             "class Scenario_Sample extends Dobby_Scenario { // Don't touch this line" . PHP_EOL . $code . PHP_EOL . "}// Don't touch this line";
 
-        file_put_contents($this->_path . ucfirst($this->filename) . EXT, $code, 0x777);
+        file_put_contents($this->_path . ucfirst($this->name) . EXT, $code, 0x777);
     }
 
     /**
@@ -162,10 +170,10 @@ class Scenario {
     protected function _save() {
 
         if ($this->id_scenarios) {
-            return Database::instance()->prepare('UPDATE scenarios SET filename=:filename, is_active=:is_active,
+            return Database::instance()->prepare('UPDATE scenarios SET name=:name, is_active=:is_active,
                                             last_date=NOW(), execute_date = :execute_date, error = :error, data=:data
                                            WHERE id_scenarios=:id')
-                ->bindValue(':filename', $this->filename)
+                ->bindValue(':name', $this->name)
                 ->bindValue(':is_active', $this->is_active)
                 ->bindValue(':id', $this->id_scenarios)
                 ->bindValue(':execute_date', $this->execute_date)
@@ -173,9 +181,9 @@ class Scenario {
                 ->bindValue(':data', json_encode($this->data))
                 ->execute();
         } else {
-            $id = Database::instance()->prepare('INSERT INTO scenarios(filename, is_active, create_date)  VALUES(:filename, :is_active, NOW())')
+            $id = Database::instance()->prepare('INSERT INTO scenarios(name, is_active, create_date)  VALUES(:name, :is_active, NOW())')
                 ->bindValue(':is_active', $this->is_active)
-                ->bindValue(':filename', $this->filename)
+                ->bindValue(':name', $this->name)
                 ->execute()
                 ->lastInsertId();
             $this->id_scenarios = $id;

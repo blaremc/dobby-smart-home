@@ -25,3 +25,9 @@
 [submodule "htdocs/system"]
 	path = htdocs/system
 	url = https://github.com/dobby-home/kohana-core.git
+[submodule "htdocs/modules_dobby/multiroom"]
+	path = htdocs/modules_dobby/multiroom
+	url = https://github.com/dobby-home/multiroom
+[submodule "htdocs/modules_dobby/light_control"]
+	path = htdocs/modules_dobby/light_control
+	url = https://github.com/dobby-home/light-control.git

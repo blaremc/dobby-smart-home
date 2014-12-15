@@ -5,6 +5,7 @@ class EventBus {
 
     const DEVICE_CHANGE = 1;
     const DEVICE_UPDATE = 2;
+    const SCENARIO_COMPLETE = 3;
 
     /**
      * @var Dobby_Scenario[][]
@@ -16,6 +17,11 @@ class EventBus {
      */
     protected $_scenarios = array();
 
+    /**
+     * @var EventBus
+     */
+    protected static $_instance = null;
+
     public function __construct() {
 
         $scenarios = Scenario::getScenarios();
@@ -23,6 +29,17 @@ class EventBus {
             $this->_scenarios[] = $scenario->getClass();
         }
         $this->_init();
+    }
+
+    /**
+     * @return EventBus
+     */
+    public static function instance() {
+
+        if (!self::$_instance) {
+            self::$_instance = new EventBus();
+        }
+        return self::$_instance;
     }
 
     protected function _init() {
@@ -37,15 +54,15 @@ class EventBus {
 
     /**
      * @param int    $event
-     * @param Device $device
+     * @param Device|Scenario $object
      */
-    public function trigger($event, $device) {
+    public function trigger($event, $object) {
 
-        if (empty($this->_subscribes[$device->name . '_' . $event])){
+        if (empty($this->_subscribes[$object->name . '_' . $event])) {
             return;
         }
-        foreach ($this->_subscribes[$device->name . '_' . $event] as $scenario) {
-            $scenario->event($event, $device);
+        foreach ($this->_subscribes[$object->name . '_' . $event] as $scenario) {
+            $scenario->event($event, $object);
         }
     }
 

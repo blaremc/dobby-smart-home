@@ -42,7 +42,7 @@ class Dobby_Driver {
     protected function parseAddress($address) {
         $parts = explode('://', $address);
         $protocol = $parts[0];
-        $parts = explode(':', $parts[1]);
+        $parts = explode('/', $parts[1]);
         array_unshift($parts, $protocol);
         return $parts;
     }

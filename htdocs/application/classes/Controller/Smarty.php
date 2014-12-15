@@ -32,7 +32,7 @@ class Controller_Smarty extends Controller {
             // Load the template
             $this->view = Smarty_View::factory();
         }
-
+        $this->view->set('modules', Dobby::$modules);
     }
 
     /**
@@ -42,11 +42,13 @@ class Controller_Smarty extends Controller {
         if ($this->auto_render === true) {
 
             $t = Profiler::start('index', 'view');
-            $this->response->body($this->view->render( $this->template . '.tpl'));
+            $this->response->body($this->view->render($this->template . '.tpl'));
             Profiler::stop($t);
         }
 
         parent::after();
+        Module::compileModuleJS();
+        Module::compileModuleCSS();
     }
 
 

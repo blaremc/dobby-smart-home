@@ -7,6 +7,20 @@ Route::set('admin_devices', 'admin/devices(/<action>)(/<id>)', array('action' =>
         'directory' => 'Admin',
     ));
 
+Route::set('admin_actions', 'admin/actions(/<action>)(/<id>)', array('action' => 'add', 'id' => '[0-9]+'))
+    ->defaults(array(
+        'controller' => 'Actions',
+        'action' => 'index',
+        'directory' => 'Admin',
+    ));
+
+Route::set('admin_scenarios', 'admin/scenarios(/<action>)(/<id>)', array('action' => 'add', 'id' => '[0-9]+'))
+    ->defaults(array(
+        'controller' => 'Scenarios',
+        'action' => 'index',
+        'directory' => 'Admin',
+    ));
+
 
 Route::set('admin', 'admin(/<controller>(/<action>(/<id>)))')
     ->defaults(array(

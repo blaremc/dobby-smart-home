@@ -35,9 +35,11 @@ class Task_Main extends Dobby_Minion_Task {
             $values = $this->_waitProcess($aPool);
             unset($aPool);
 
+            Kohana::$log->add(LOG::TASK, print_r($values,true));
             foreach ($values as $key => $value) {
 
                 $device = Device::factory(intval($key));
+                // todo триггеры в отдельных потоках
                 $eventBus->trigger(EventBus::DEVICE_UPDATE, $device);
 
                 if (substr($value, 0, 5) == 'VALUE') {

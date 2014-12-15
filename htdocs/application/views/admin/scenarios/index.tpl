@@ -14,11 +14,11 @@
         <tbody>
     {foreach $scenarios as $scenario}
         <tr>
-            <td>{$device.filename}</td>
-            <td>{$device.execute_date}</td>
-            <td>{if $device.is_active}Да{else}Нет{/if}</td>
-            <td>{$device.error}</td>
-            <td><a href="/admin/scenarios/{$device.id_scenarios}">Редактировать</a> </td>
+            <td>{$scenario.name}</td>
+            <td>{$scenario.execute_date}</td>
+            <td>{if $scenario.is_active}Да{else}Нет{/if}</td>
+            <td>{$scenario.error}</td>
+            <td><a href="/admin/scenarios/{$scenario.id_scenarios}">Редактировать</a> </td>
         </tr>
     {/foreach}
         </tbody>

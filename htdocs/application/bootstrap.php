@@ -128,6 +128,8 @@ Kohana::modules(array( // 'auth'       => MODPATH.'auth',       // Basic authent
     'message' => MODPATH . 'message', // Message for linking js and
     'i18n' => MODPATH . 'i18n', // Smarty3
     'driver_arduino' => MODPATH_DOBBY . 'driver_arduino',
+    'multiroom' => MODPATH_DOBBY . 'multiroom',
+    'light' => MODPATH_DOBBY . 'light',
 ));
 
 Dobby::init();

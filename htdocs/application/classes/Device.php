@@ -93,7 +93,11 @@ class Device {
      * @return mixed
      */
     public function getValue() {
-        return Dobby_Driver::factory($this->driver)->getValue($this->address);
+        try {
+            return Dobby_Driver::factory($this->driver)->getValue($this->address);
+        } catch (Exception $e) {
+
+        }
     }
 
     /**
@@ -102,7 +106,11 @@ class Device {
      * @param mixed $value
      */
     public function setValue($value) {
-        Dobby_Driver::factory($this->driver)->setValue($this->address, $value);
+        try {
+            Dobby_Driver::factory($this->driver)->setValue($this->address, $value);
+        } catch (Exception $e) {
+
+        }
     }
 
 
@@ -112,6 +120,7 @@ class Device {
      * @param $value
      */
     public function setLastValue($value) {
+        $value = $value=='' ? $this->last_value : $value;
         $this->error = null;
         $this->is_changed = $value != $this->last_value;
         $this->last_value = $value;

@@ -40,6 +40,8 @@ class Auth {
 
         if (!Message::instance()->isempty()) return false;
 
+
+
         $id = Database::instance()->prepare('INSERT INTO users(email, login, pass) VALUES (:email, :login, :pass)')
             ->bindValue(':email', $values['email'])
             ->bindValue(':login', $values['login'])
@@ -84,7 +86,6 @@ class Auth {
             ->execute()
             ->fetch();
         $pass = self::generateHash($values['pass'], $user['id_users']);
-
         // If not find then exit
         if ($user['pass'] != $pass) {
             Message::instance(1, 'Wrong login or pass', 'ipass');

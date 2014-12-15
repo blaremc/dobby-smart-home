@@ -334,7 +334,7 @@
             var fapp = this;
             var messcallback;
             this._selector = selector;
-            this._url = url;
+            this._url = url ? url : $(this._selector).attr('action');
 
             this._callback = o.callback ? o.callback : function () {};
 
