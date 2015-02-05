@@ -20,7 +20,12 @@ Route::set('admin_scenarios', 'admin/scenarios(/<action>)(/<id>)', array('action
         'action' => 'index',
         'directory' => 'Admin',
     ));
-
+Route::set('admin_schedules', 'admin/schedules(/<action>)(/<id>)', array('action' => 'add', 'id' => '[0-9]+'))
+    ->defaults(array(
+        'controller' => 'Schedules',
+        'action' => 'index',
+        'directory' => 'Admin',
+    ));
 
 Route::set('admin', 'admin(/<controller>(/<action>(/<id>)))')
     ->defaults(array(

@@ -9,7 +9,7 @@
         <div class="form-group">
             <label for="address">Адрес устройства</label>
             <input id="address" name="address" class="required iaddress form-control"
-                   placeholder="Введите адрес устройства">
+                   placeholder="Дата">
         </div>
         <div class="form-group">
             <label for="driver">Драйвер</label>

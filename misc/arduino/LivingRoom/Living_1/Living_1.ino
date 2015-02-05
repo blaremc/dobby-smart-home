@@ -155,7 +155,7 @@ void act(){
   
   if (strcmp(METHOD, "setLed")== 0){
   
-    if (PARAMS[0] == "1"){
+    if (atoi(PARAMS[0]) == 1){
       
       LED1REDTARGET = atoi(PARAMS[1]);
       LED1GREENTARGET = atoi(PARAMS[2]);
@@ -167,7 +167,7 @@ void act(){
       }
     
     }
-     if (PARAMS[0] == "2"){
+     if (atoi(PARAMS[0]) == 2){
         LED2REDTARGET = atoi(PARAMS[1]);
         LED2GREENTARGET = atoi(PARAMS[2]);
         LED2BLUETARGET = atoi(PARAMS[3]);
