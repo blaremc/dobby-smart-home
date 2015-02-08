@@ -109,7 +109,11 @@ class Group {
      * @throws Kohana_Exception
      */
     public static function getList() {
-        return Database::instance()->prepare('SELECT * FROM groups ORDER BY ord')
+        return Database::instance()->prepare('SELECT groups.*, actions.count
+                                                    FROM `groups`
+                                                    LEFT JOIN (SELECT COUNT(*) as count, id_groups FROM actions GROUP BY id_groups) actions USING(id_groups)
+                                                    ORDER BY ord
+                                                    ')
             ->execute()
             ->fetchAll();
     }

@@ -54,6 +54,21 @@ Route::set('ajax', 'ajax(/<controller>(/<action>))')
         'directory' => 'Ajax',
     ));
 
+Route::set('actions', 'actions(/<id>(/<action>))')
+    ->defaults(array(
+        'controller' => 'Actions',
+        'action' => 'index',
+        'directory' => 'Front',
+    ));
+
+Route::set('ajax_actions', 'ajax/actions(/<id>(/<action>))')
+    ->defaults(array(
+        'controller' => 'Actions',
+        'action' => 'index',
+        'directory' => 'Ajax',
+    ));
+
+
 Route::set('default', '(<controller>(/<action>))')
     ->defaults(array(
         'controller' => 'index',

@@ -43,15 +43,17 @@
                 {/foreach}
             </select>
         </div>
-        {foreach $scenarios as $scenario}
-            <div class="app-scenario app-scenario-{$scenario.id_scenarios}" style="display: none;">
-                <div class="well">
+        <div class="js-scenario-params"></div>
+
+        <button type="submit" class="btn btn-default">Добавить действие</button>
+    </form>
+    {foreach $scenarios as $scenario}
+        <div class="app-scenario app-scenario-{$scenario.id_scenarios}" style="display: none;">
+            <div class="well">
                 {foreach $scenario.params as $key => $param}
                     {include "admin/helpers/params.tpl" param="$param" name="$key"}
                 {/foreach}
-                </div>
             </div>
-        {/foreach}
-        <button type="submit" class="btn btn-default">Добавить действие</button>
-    </form>
+        </div>
+    {/foreach}
 {/block}

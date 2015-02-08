@@ -29,9 +29,12 @@ class Scenario_Bath extends Dobby_Scenario {
         'percent' => array('type' => 'int', 'caption' => 'Процент заполнения ванны'),
         'temperature' => array('type' => 'int', 'caption' => 'Температура воды'),
     );
+    public function status($params) {
+
+    }
 
 
-    protected function _execute($params) {
+    protected function _execute($params, $switcher) {
 
         if ($this->get('is_execute')) {
             return;

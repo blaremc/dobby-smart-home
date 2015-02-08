@@ -62,7 +62,7 @@ ul.menu li a:hover {
 
 .actions-block .action a {
     color: #9DEDB6;
-    font-size: 16px;
+    font-size: 20px;
     display: block;
     padding: 10px;
     width: 200px;
@@ -71,6 +71,19 @@ ul.menu li a:hover {
     border: 1px solid #555;
     border-radius: 2px;
     text-decoration: none;
+    position: relative;
+}
+
+.actions-block .action a.active {
+    background: #BDC28C;
+    color: #000;
+}
+
+.actions-block .action a .count {
+    position: absolute;
+    bottom: 0;
+    right: 5px;
+    font-size: 26px;
 }
 
 .actions-block .action a:hover {

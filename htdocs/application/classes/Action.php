@@ -31,7 +31,12 @@ class Action {
 
     public function execute() {
         $scenario = Scenario::factory($this->id_scenarios);
-        $scenario->execute($this->data);
+        $scenario->execute($this->data, $this->is_switcher);
+    }
+
+    public function status() {
+        $scenario = Scenario::factory($this->id_scenarios);
+        return $scenario->status($this->data);
     }
 
     /**
@@ -145,7 +150,14 @@ class Action {
     }
 
 
-    public static function getActionsAsArray() {
-        return Database::instance()->prepare('SELECT * FROM actions')->execute()->fetchAll();
+    public static function getActionsAsArray($group = null) {
+        if (is_null($group)) {
+            return Database::instance()->prepare('SELECT * FROM actions ORDER BY ord')
+                ->execute()->fetchAll();
+        } else {
+            return Database::instance()->prepare('SELECT * FROM actions WHERE id_groups=:group ORDER BY ord')
+                ->bindValue(':group', $group)
+                ->execute()->fetchAll();
+        }
     }
 }

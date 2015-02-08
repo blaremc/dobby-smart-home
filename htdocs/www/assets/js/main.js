@@ -83,7 +83,6 @@
 
         $(document).on('change', '.app-action-scenario', function () {
 
-
             $('.js-scenario-params').html($('.app-scenario-' + $(this).val()).html());
         });
         $('.app-action-scenario').trigger('change');
@@ -116,16 +115,34 @@
             });
         });
 
-        $(document).on('click', '.js-color-clear', function () {
+        $(document).on('change', '.js-color-clear', function () {
             if ($(this).prop('checked')) {
                 $(this).closest('.form-group').find('.js-color').val('').attr('disabled', 'disabled');
             } else {
                 $(this).closest('.form-group').find('.js-color').removeAttr('disabled');
             }
         });
-
+        $('.js-color-clear').trigger('change');
         APP.submit('.app-module-action');
-    });
 
+
+        $('.app-start-action[data-switcher="1"]').each(function () {
+            getStatus($(this).data('id'));
+        });
+
+        function getStatus (id) {
+            $.post('/ajax/actions/' + id + '/status', function (data) {
+                var $data = $.parseJSON(data);
+                if ($data.value) {
+                    $('.app-start-action[data-id="' + id + '"]').removeClass('active');
+                } else {
+                    $('.app-start-action[data-id="' + id + '"]').addClass('active')
+                }
+                setTimeout(function () {
+                    getStatus(id)
+                }, 1000);
+            });
+        }
+    });
 
 })(jQuery);

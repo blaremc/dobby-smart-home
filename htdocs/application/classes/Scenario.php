@@ -30,10 +30,10 @@ class Scenario {
         $this->_path = APPPATH . 'classes/Scenario/';
     }
 
-    public function execute($data) {
+    public function execute($data, $switcher) {
 
         $scenario = $this->getClass();
-        $scenario->execute($data);
+        $scenario->execute($data, $switcher);
     }
 
     /**
@@ -79,6 +79,11 @@ class Scenario {
         }
 
         return new Scenario($value);
+    }
+
+    public function status($data) {
+        $scenario = $this->getClass();
+        return $scenario->status($data);
     }
 
     /**

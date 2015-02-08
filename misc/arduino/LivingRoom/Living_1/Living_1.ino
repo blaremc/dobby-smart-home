@@ -5,7 +5,7 @@
 
 // Ethernet Configuration
 byte mac[] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
-IPAddress ip(192,168,1,11);
+IPAddress ip(192,168,1,10);
 EthernetServer server(80);
 #define REQUESTSIZE 30
 
@@ -63,6 +63,8 @@ byte MOTIONVALUE = 0;
 int MOTIONTIME = 0;
 int MOTIONDELAY = 1000;
 
+byte RELE1VALUE = 1;
+byte RELE2VALUE = 1;
 
 // Storage for the recorded code
 int codeType = -1; // The type of code
@@ -106,13 +108,15 @@ void act(){
   
   if (strcmp(METHOD, "setRele") == 0){  
     if (atoi(PARAMS[0])==1){
-      if (atoi(PARAMS[1])==0){
+      RELE1VALUE = atoi(PARAMS[1]);
+      if (atoi(PARAMS[1])==0){       
         digitalWrite(RELE1PIN, HIGH); 
-      } else {
+      } else {      
         digitalWrite(RELE1PIN, LOW); 
       }
     }
     if (atoi(PARAMS[0])==2){
+      RELE2VALUE = atoi(PARAMS[1]);
       if (atoi(PARAMS[1])==0){
         digitalWrite(RELE2PIN, HIGH); 
       } else {
@@ -120,8 +124,14 @@ void act(){
       }
     }
   }
-  
-  
+  if (strcmp(METHOD, "getRele") == 0){  
+    if (atoi(PARAMS[0])==1){
+      client.println(RELE1VALUE);  
+    }
+    if (atoi(PARAMS[0])==2){
+      client.println(RELE2VALUE);   
+    }
+  }
   if (strcmp(METHOD, "getLight") == 0){  
     client.println(analogRead(LIGHTPIN));    
   }  
@@ -151,7 +161,22 @@ void act(){
   }
   */
 
-  
+  if (strcmp(METHOD, "getLed") == 0){  
+    if (atoi(PARAMS[0]) == 1){
+      client.print(LED1REDTARGET);
+      client.print(":");
+      client.print(LED1GREENTARGET);
+      client.print(":");
+      client.println(LED1BLUETARGET);
+    }
+    if (atoi(PARAMS[0]) == 2){
+      client.print(LED2REDTARGET);
+      client.print(":");
+      client.print(LED2GREENTARGET);
+      client.print(":");
+      client.println(LED2BLUETARGET);
+    }
+  }  
   
   if (strcmp(METHOD, "setLed")== 0){
   

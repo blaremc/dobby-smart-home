@@ -31,9 +31,9 @@ abstract class Dobby_Scenario {
     protected $_scenario = null;
 
 
-    public function execute($params) {
+    public function execute($params, $switcher) {
         $params = array_merge($this->params, $params);
-        $this->_execute($params);
+        $this->_execute($params, $switcher);
     }
 
     /**
@@ -58,7 +58,9 @@ abstract class Dobby_Scenario {
      * @param $params
      * @return mixed
      */
-    abstract protected function _execute($params);
+    abstract protected function _execute($params, $switcher);
+
+    abstract public function status($params);
 
     /**
      * Execute when trigger event
