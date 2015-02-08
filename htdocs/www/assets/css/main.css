@@ -74,8 +74,13 @@ ul.menu li a:hover {
     position: relative;
 }
 
+.actions-block .action a.switcher {
+    background: url(/assets/img/power.png) no-repeat 5px 10px ;
+    text-indent: 30px;
+}
+
 .actions-block .action a.active {
-    background: #BDC28C;
+    background-color: #BDC28C;
     color: #000;
 }
 
@@ -88,6 +93,6 @@ ul.menu li a:hover {
 
 .actions-block .action a:hover {
 
-    background: #555;
+    background-color: #555;
     border: 1px solid #777;
 }
