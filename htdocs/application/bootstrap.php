@@ -84,7 +84,7 @@ if (isset($_SERVER['SERVER_PROTOCOL'])) {
 if (isset($_SERVER['KOHANA_ENV'])) {
     Kohana::$environment = constant('Kohana::' . strtoupper($_SERVER['KOHANA_ENV']));
 }
-
+Kohana::$environment = Kohana::DEVELOPMENT;
 /**
  * Initialize Kohana, setting the default options.
  *

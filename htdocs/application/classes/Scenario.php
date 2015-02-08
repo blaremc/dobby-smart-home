@@ -38,6 +38,7 @@ class Scenario {
 
     /**
      * @param $id
+     *
      * @return array
      */
     public static function getScenarioById($id) {
@@ -50,6 +51,7 @@ class Scenario {
 
     /**
      * @param null $value
+     *
      * @return null|Scenario
      * @throws Dobby_Exception_404
      */
@@ -83,6 +85,7 @@ class Scenario {
      * Save scenario from form
      *
      * @param $values
+     *
      * @return Scenario
      */
     public function save($values) {
@@ -92,7 +95,8 @@ class Scenario {
             ->check();
         Message::instance($valid->errors());
 
-        if (!Message::instance()->isempty()) return false;
+        if (!Message::instance()->isempty())
+            return false;
 
         $this->name = $values['name'];
         $this->is_active = isset($values['is_active']) ? 1 : 0;
@@ -145,6 +149,7 @@ class Scenario {
 
     /**
      * @param $name
+     *
      * @return null
      */
     public function getData($name) {
@@ -161,7 +166,9 @@ class Scenario {
         $code = "<?php defined('SYSPATH') or die('No direct script access.'); // Don't touch this line" . PHP_EOL .
             "class Scenario_Sample extends Dobby_Scenario { // Don't touch this line" . PHP_EOL . $code . PHP_EOL . "}// Don't touch this line";
 
-        file_put_contents($this->_path . ucfirst($this->name) . EXT, $code, 0x777);
+        if (!file_exists($this->_path . ucfirst($this->name) . EXT)) {
+            file_put_contents($this->_path . ucfirst($this->name) . EXT, $code, 0x777);
+        }
     }
 
     /**

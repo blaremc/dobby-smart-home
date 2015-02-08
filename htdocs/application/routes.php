@@ -26,7 +26,12 @@ Route::set('admin_schedules', 'admin/schedules(/<action>)(/<id>)', array('action
         'action' => 'index',
         'directory' => 'Admin',
     ));
-
+Route::set('admin_groups', 'admin/groups(/<action>)(/<id>)', array('action' => 'add', 'id' => '[0-9]+'))
+    ->defaults(array(
+        'controller' => 'Groups',
+        'action' => 'index',
+        'directory' => 'Admin',
+    ));
 Route::set('admin', 'admin(/<controller>(/<action>(/<id>)))')
     ->defaults(array(
         'controller' => 'Index',

@@ -143,6 +143,11 @@ class Rules {
             array('digit'),
         );
 
+        $this->digit_not_empty = array(
+            array('not_empty'),
+            array('digit'),
+        );
+
         $this->message = array(
             array('not_empty'),
         );

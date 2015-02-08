@@ -16,6 +16,26 @@
             </select>
         </div>
         <div class="form-group">
+            <label for="group">Группа</label>
+            <select class="form-control required igroup app-action-group" name="group" id="group">
+                {foreach $groups as $group}
+                    <option value="{$group.id_groups}">{$group.name}</option>
+                {/foreach}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="ord">Переключатель</label>
+            <select class="form-control required iswitcher" name="switcher">
+                <option value="0">Нет</option>
+                <option value="1">Да</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="ord">Порядок вывода</label>
+            <input id="ord" name="ord" class="required iord form-control"
+                   placeholder="Порядок вывода" value="{$item.ord}">
+        </div>
+        <div class="form-group">
             <label for="scenario">Какой сценарий будет выполняться</label>
             <select class="form-control required iscenario app-action-scenario" name="scenario" id="scenario">
                 {foreach $scenarios as $scenario}

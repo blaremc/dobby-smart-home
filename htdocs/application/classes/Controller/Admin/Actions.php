@@ -12,6 +12,7 @@ class Controller_Admin_Actions extends Controller_Admin {
             $this->template = 'admin/actions/edit';
             $this->view->set('action', (array)Action::factory($this->request->param('id')));
             $this->view->set('users', User::getUsersAsArray());
+            $this->view->groups = Group::getList();
             $scenarios = Scenario::getScenarios();
             foreach ($scenarios as &$scenario) {
                 $class = $scenario->getClass();
@@ -33,7 +34,7 @@ class Controller_Admin_Actions extends Controller_Admin {
     public function action_add() {
         $this->template = 'admin/actions/add';
         $this->view->set('users', User::getUsersAsArray());
-
+        $this->view->groups = Group::getList();
         $scenarios = Scenario::getScenarios();
         foreach ($scenarios as &$scenario) {
             $class = $scenario->getClass();
