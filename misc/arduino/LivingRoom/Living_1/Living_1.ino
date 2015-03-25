@@ -2,10 +2,11 @@
 #include <IRremote.h>
 #include <SPI.h>
 #include <Ethernet.h>
+#include <dht.h>
 
 // Ethernet Configuration
-byte mac[] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
-IPAddress ip(192,168,1,10);
+byte mac[] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x12 };
+IPAddress ip(192,168,1,12);
 EthernetServer server(80);
 #define REQUESTSIZE 30
 
@@ -63,6 +64,8 @@ byte MOTIONVALUE = 0;
 int MOTIONTIME = 0;
 int MOTIONDELAY = 1000;
 
+int TEMPERATUREVALUE = 0;
+int HUMIDITYVALUE = 0;
 byte RELE1VALUE = 1;
 byte RELE2VALUE = 1;
 
@@ -72,7 +75,7 @@ unsigned long codeValue; // The code value if not raw
 unsigned int rawCodes[RAWBUF]; // The durations if raw
 int codeLen; // The length of the code
 int toggle = 0; // The RC5/6 toggle state
-
+DHT sensor = DHT();
 
 EthernetClient client;
 
@@ -81,7 +84,7 @@ void setup(void) {
   server.begin();
   Serial.begin(9600); 
   irrecv.enableIRIn();
-
+sensor.attach(A0);
   pinMode(LED1REDPIN, OUTPUT);
   pinMode(LED1GREENPIN, OUTPUT);
   pinMode(LED1BLUEPIN, OUTPUT);
@@ -124,6 +127,7 @@ void act(){
       }
     }
   }
+  
   if (strcmp(METHOD, "getRele") == 0){  
     if (atoi(PARAMS[0])==1){
       client.println(RELE1VALUE);  
@@ -132,6 +136,13 @@ void act(){
       client.println(RELE2VALUE);   
     }
   }
+  if (strcmp(METHOD, "getTemperature") == 0){  
+    getTemperature();
+    client.print(TEMPERATUREVALUE);    
+    client.print("C ");    
+    client.print(HUMIDITYVALUE);    
+    client.print("%");    
+  } 
   if (strcmp(METHOD, "getLight") == 0){  
     client.println(analogRead(LIGHTPIN));    
   }  
@@ -322,6 +333,8 @@ void loop(void) {
     delay(1);
     client.stop();
   }
+  getTemperature();
+  delay(2000);
 }
 
 
@@ -387,6 +400,38 @@ void parseRequest(char *request){
        ind++;
      }
    }
+}
+
+void getTemperature(){
+  
+  // метод update заставляет сенсор выдать текущие измерения
+    sensor.update();
+ 
+    switch (sensor.getLastError())
+    {
+        case DHT_ERROR_OK:
+    
+             char msg[128];
+            // данные последнего измерения можно считать соответствующими
+            // методами
+            sprintf(msg, "Temperature = %dC, Humidity = %d%%", 
+                    sensor.getTemperatureInt(), sensor.getHumidityInt());
+            Serial.println(msg);
+            break;
+        case DHT_ERROR_START_FAILED_1:
+            Serial.println("Error: start failed (stage 1)");
+            break;
+        case DHT_ERROR_START_FAILED_2:
+            Serial.println("Error: start failed (stage 2)");
+            break;
+        case DHT_ERROR_READ_TIMEOUT:
+            Serial.println("Error: read timeout");
+            break;
+        case DHT_ERROR_CHECKSUM_FAILURE:
+            Serial.println("Error: checksum error");
+            break;
+    }
+ 
 }
 
 void storeCode(decode_results *results) {
