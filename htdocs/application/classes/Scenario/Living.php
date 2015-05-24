@@ -156,7 +156,7 @@ class Scenario_Living extends Dobby_Scenario {
                     Dobby::$log->add('Detected move in kitchen, enable light');
                     $this->device('KitchenLights')->setValue('1:1');
                     $this->set('enable_window_light', '1');
-                    $this->times['kitchen_window_light'] = -1;
+                    $this->times['kitchen_window_light'] = 0;
                 } else {
                     $this->times['kitchen_window_light'] = $this->delays['kitchen_window_light'];
                 }
