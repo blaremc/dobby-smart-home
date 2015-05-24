@@ -5,8 +5,8 @@
 #include <dht.h>
 
 // Ethernet Configuration
-byte mac[] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x12 };
-IPAddress ip(192,168,1,12);
+byte mac[] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x15 };
+IPAddress ip(192,168,1,15);
 EthernetServer server(80);
 #define REQUESTSIZE 30
 
@@ -63,6 +63,10 @@ IRsend irsend;
 byte MOTIONVALUE = 0;
 int MOTIONTIME = 0;
 int MOTIONDELAY = 1000;
+
+int LIGHTVALUE = -1;
+int LIGHTTIME = 0;
+int LIGHTDELAY = 300;
 
 int TEMPERATUREVALUE = 0;
 int HUMIDITYVALUE = 0;
@@ -144,7 +148,8 @@ void act(){
     client.print("%");    
   } 
   if (strcmp(METHOD, "getLight") == 0){  
-    client.println(analogRead(LIGHTPIN));    
+    client.println(LIGHTVALUE);    
+   
   }  
   if (strcmp(METHOD,  "getMotion")== 0){  
     client.println(MOTIONVALUE);    
@@ -245,6 +250,17 @@ void loop(void) {
     }
   }
   
+  LIGHTTIME++;
+   Serial.print(LIGHTTIME);
+   Serial.print(" "); 
+   Serial.println(LIGHTDELAY);
+   
+  if (LIGHTTIME >= LIGHTDELAY) {
+   LIGHTTIME = 0;
+   LIGHTVALUE = analogRead(LIGHTPIN);
+   }
+  
+  
   // ИК приемник
   if (irrecv.decode(&results)) // Если данные пришли 
   {
@@ -333,8 +349,8 @@ void loop(void) {
     delay(1);
     client.stop();
   }
-  getTemperature();
-  delay(2000);
+  //getTemperature();
+ // delay(2000);
 }
 
 
