@@ -5,8 +5,8 @@
 #include <dht.h>
 
 // Ethernet Configuration
-byte mac[] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x15 };
-IPAddress ip(192,168,1,15);
+byte mac[] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x16 };
+IPAddress ip(192,168,1,16);
 EthernetServer server(80);
 #define REQUESTSIZE 30
 
@@ -130,6 +130,7 @@ void act(){
         digitalWrite(RELE2PIN, LOW); 
       }
     }
+    return;
   }
   
   if (strcmp(METHOD, "getRele") == 0){  
@@ -139,6 +140,7 @@ void act(){
     if (atoi(PARAMS[0])==2){
       client.println(RELE2VALUE);   
     }
+    return;
   }
   if (strcmp(METHOD, "getTemperature") == 0){  
     getTemperature();
@@ -146,19 +148,23 @@ void act(){
     client.print("C ");    
     client.print(HUMIDITYVALUE);    
     client.print("%");    
+    return;
   } 
   if (strcmp(METHOD, "getLight") == 0){  
-    client.println(LIGHTVALUE);    
+    client.println(LIGHTVALUE);   
+   return; 
    
   }  
   if (strcmp(METHOD,  "getMotion")== 0){  
     client.println(MOTIONVALUE);    
+    return;
   }
   
   if (strcmp(METHOD,  "getIR")== 0){  
     
     client.println(codeType);
     client.println(codeValue);
+        return;
  /*
     for (int i =0; i<10; i++){
       client.print(IRCOMMANDS[i]);
@@ -192,6 +198,7 @@ void act(){
       client.print(":");
       client.println(LED2BLUETARGET);
     }
+    return;
   }  
   
   if (strcmp(METHOD, "setLed")== 0){
@@ -218,8 +225,12 @@ void act(){
          LED2SMOOTH = 1; 
         } 
     }
-    
+    return;
   } 
+  
+  client.println("Kitchen Arduino");    
+  client.println("Version 1.0");    
+
   
 }
 
