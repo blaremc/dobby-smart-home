@@ -47,13 +47,19 @@ class EventBus {
         foreach ($this->_scenarios as $scenario) {
 
             foreach ($scenario->events as $key => $event) {
-                $this->_subscribes[$key . '_' . $event][] = $scenario;
+                if (is_array($event)) {
+                    foreach ($event as $e) {
+                        $this->_subscribes[$key . '_' . $e][] = $scenario;
+                    }
+                } else {
+                    $this->_subscribes[$key . '_' . $event][] = $scenario;
+                }
             }
         }
     }
 
     /**
-     * @param int    $event
+     * @param int             $event
      * @param Device|Scenario $object
      */
     public function trigger($event, $object) {

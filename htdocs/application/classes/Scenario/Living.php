@@ -7,7 +7,7 @@ class Scenario_Living extends Dobby_Scenario {
         'LivingMotion' => EventBus::DEVICE_CHANGE,
         'LivingLight' => EventBus::DEVICE_CHANGE,
         'LivingIRReceiver' => EventBus::DEVICE_CHANGE,
-        'KitchenMotion' => EventBus::DEVICE_CHANGE,
+        'KitchenMotion' => Array(EventBus::DEVICE_CHANGE, EventBus::DEVICE_UPDATE),
         'KitchenLight' => EventBus::DEVICE_CHANGE,
     );
 
@@ -35,6 +35,15 @@ class Scenario_Living extends Dobby_Scenario {
         'enable_window_light' => array('type' => 'bool', 'caption' => 'Включены рабочий свет на кухне'),
     );
 
+    protected $delays = array(
+        'kitchen_window_light' => 300, // Максимальная задержка при входе на кухню
+        'kitchen_window_light_min' => 10 // Задержка подсветки кухни при входе в гостинную
+    );
+
+    protected $times = array(
+        'kitchen_window_light' => 0, // Оставшееся время подсветки на кухне
+    );
+
 
     protected function _execute($params, $switcher) {
         switch ($params['name']) {
@@ -59,8 +68,15 @@ class Scenario_Living extends Dobby_Scenario {
 
         switch ($device->name) {
 
+            case 'LivingMotion':
+                $this->checkLivingMotion();
+                break;
             case 'KitchenMotion':
-                $this->checkKitchenWindowLight();
+                if ($event == EventBus::DEVICE_CHANGE) {
+                    $this->checkKitchenMotion();
+                } else {
+                    $this->checkOff();
+                }
                 break;
         }
     }
@@ -129,19 +145,34 @@ class Scenario_Living extends Dobby_Scenario {
     }
 
 
-    protected function checkKitchenWindowLight() {
+    protected function checkKitchenMotion() {
 
         $profile = Schedule::getCurrentProfile();
-
         if ($this->device('KitchenMotion')->last_value) {
             $this->device('KitchenLights')->setValue('1:1');
         } else {
-            $this->device('KitchenLights')->setValue('1:0');
+            $this->times['kitchen_window_light'] = $this->delays['kitchen_window_light'];
         }
     }
 
+    protected function checkLivingMotion() {
+        if ($this->device('KitchenLight')->last_value < 100) {
+            if ($this->device('KitchenMotion')->last_value) {
+                $this->device('KitchenLights')->setValue('1:1');
+            } else {
+                $this->times['kitchen_window_light'] = $this->delays['kitchen_window_light_min'];
+            }
+        }
+    }
 
-
+    protected function checkOff() {
+        if ($this->times['kitchen_window_light'] > 0) {
+            $this->times['kitchen_window_light']--;
+            if ($this->times['kitchen_window_light'] <= 0) {
+                $this->device('KitchenLights')->setValue('1:0');
+            }
+        }
+    }
 
 
 }
