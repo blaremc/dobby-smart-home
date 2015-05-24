@@ -57,8 +57,11 @@ class Scenario_Living extends Dobby_Scenario {
      */
     public function event($event, $device) {
 
-        if (!$this->get('is_execute')) {
-            return;
+        switch ($device->name) {
+
+            case 'KitchenMotion':
+                $this->checkKitchenWindowLight();
+                break;
         }
     }
 
@@ -124,6 +127,21 @@ class Scenario_Living extends Dobby_Scenario {
             }
         }
     }
+
+
+    protected function checkKitchenWindowLight() {
+
+        $profile = Schedule::getCurrentProfile();
+
+        if ($this->device('KitchenMotion')->last_value) {
+            $this->device('KitchenLights')->setValue('1:1');
+        } else {
+            $this->device('KitchenLights')->setValue('1:0');
+        }
+    }
+
+
+
 
 
 }
