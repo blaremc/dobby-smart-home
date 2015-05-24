@@ -150,36 +150,40 @@ class Scenario_Living extends Dobby_Scenario {
     protected function checkKitchenMotion() {
 
         $profile = Schedule::getCurrentProfile();
-        if ($this->device('KitchenLight')->last_value < 500) {
-            if ($this->device('KitchenMotion')->last_value) {
-                Dobby::$log->add('Detected move in kitchen, enable light');
-                $this->device('KitchenLights')->setValue('1:1');
-                $this->set('enable_window_light', 1);
-                $this->times['kitchen_window_light'] = -1;
-            } else {
-                $this->times['kitchen_window_light'] = $this->delays['kitchen_window_light'];
+        if ($this->get('enable_window_light') != '1') {
+            if ($this->device('KitchenLight')->last_value < 500) {
+                if ($this->device('KitchenMotion')->last_value) {
+                    Dobby::$log->add('Detected move in kitchen, enable light');
+                    $this->device('KitchenLights')->setValue('1:1');
+                    $this->set('enable_window_light', '1');
+                    $this->times['kitchen_window_light'] = -1;
+                } else {
+                    $this->times['kitchen_window_light'] = $this->delays['kitchen_window_light'];
+                }
             }
         }
     }
 
     protected function checkLivingMotion() {
-        if ($this->device('KitchenLight')->last_value < 100) {
-            if ($this->device('LivingMotion')->last_value && $this->device('KitchenMotion')->last_value == 0) {
-                Dobby::$log->add('Detected move in living room, enable light in Kitchen');
-                $this->device('KitchenLights')->setValue('1:1');
-                $this->set('enable_window_light', 1);
-                $this->times['kitchen_window_light'] = $this->delays['kitchen_window_light_min'];
+        if ($this->get('enable_window_light') != '1') {
+            if ($this->device('KitchenLight')->last_value < 100) {
+                if ($this->device('LivingMotion')->last_value && $this->device('KitchenMotion')->last_value == 0) {
+                    Dobby::$log->add('Detected move in living room, enable light in Kitchen');
+                    $this->device('KitchenLights')->setValue('1:1');
+                    $this->set('enable_window_light', '1');
+                    $this->times['kitchen_window_light'] = $this->delays['kitchen_window_light_min'];
+                }
             }
         }
     }
 
     protected function checkOff() {
-        Minion_CLI::write($this->times['kitchen_window_light'], $this->get('enable_window_light'));
-        if ($this->get('enable_window_light')) {
+        Minion_CLI::write($this->times['kitchen_window_light'] . ' ' . $this->get('enable_window_light'));
+        if ($this->get('enable_window_light') == '1') {
             $this->times['kitchen_window_light']--;
             if ($this->times['kitchen_window_light'] <= 0) {
                 $this->device('KitchenLights')->setValue('1:0');
-                $this->set('enable_window_light', 0);
+                $this->set('enable_window_light', '0');
             }
         }
     }
