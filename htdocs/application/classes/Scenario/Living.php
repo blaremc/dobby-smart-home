@@ -69,9 +69,11 @@ class Scenario_Living extends Dobby_Scenario {
         switch ($device->name) {
 
             case 'LivingMotion':
+                Minion_CLI::write('LivingMotion');
                 $this->checkLivingMotion();
                 break;
             case 'KitchenMotion':
+                Minion_CLI::write('KitchenMotion', print_r($event, true));
                 if ($event == EventBus::DEVICE_CHANGE) {
                     $this->checkKitchenMotion();
                 } else {
@@ -166,6 +168,7 @@ class Scenario_Living extends Dobby_Scenario {
     }
 
     protected function checkOff() {
+        Minion_CLI::write($this->times['kitchen_window_light']);
         if ($this->times['kitchen_window_light'] > 0) {
             $this->times['kitchen_window_light']--;
             if ($this->times['kitchen_window_light'] <= 0) {
