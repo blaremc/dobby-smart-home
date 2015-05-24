@@ -41,7 +41,7 @@ class Scenario_Living extends Dobby_Scenario {
     );
 
     protected $times = array(
-        'kitchen_window_light' => -1, // Оставшееся время подсветки на кухне
+        'kitchen_window_light' => 0, // Оставшееся время подсветки на кухне
     );
 
 
@@ -154,6 +154,7 @@ class Scenario_Living extends Dobby_Scenario {
             if ($this->device('KitchenMotion')->last_value) {
                 Dobby::$log->add('Detected move in kitchen, enable light');
                 $this->device('KitchenLights')->setValue('1:1');
+                $this->set('enable_window_light', 1);
                 $this->times['kitchen_window_light'] = -1;
             } else {
                 $this->times['kitchen_window_light'] = $this->delays['kitchen_window_light'];
@@ -166,17 +167,19 @@ class Scenario_Living extends Dobby_Scenario {
             if ($this->device('LivingMotion')->last_value && $this->device('KitchenMotion')->last_value == 0) {
                 Dobby::$log->add('Detected move in living room, enable light in Kitchen');
                 $this->device('KitchenLights')->setValue('1:1');
+                $this->set('enable_window_light', 1);
                 $this->times['kitchen_window_light'] = $this->delays['kitchen_window_light_min'];
             }
         }
     }
 
     protected function checkOff() {
-        Minion_CLI::write($this->times['kitchen_window_light']);
-        if ($this->times['kitchen_window_light'] >= 0) {
+        Minion_CLI::write($this->times['kitchen_window_light'], $this->get('enable_window_light'));
+        if ($this->get('enable_window_light')) {
             $this->times['kitchen_window_light']--;
             if ($this->times['kitchen_window_light'] <= 0) {
                 $this->device('KitchenLights')->setValue('1:0');
+                $this->set('enable_window_light', 0);
             }
         }
     }
