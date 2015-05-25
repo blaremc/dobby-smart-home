@@ -163,7 +163,7 @@ class Scenario_Living extends Dobby_Scenario {
 
         $profile = Schedule::getCurrentProfile();
         if ($this->get('enable_window_light_user') != '1') {
-            if ($this->device('KitchenMotion')->last_value) {
+            if ($this->device('KitchenMotion')->last_value == '1') {
                 if ($this->device('KitchenLight')->last_value < 400) {
 
                     Dobby::$log->add('Detected move in kitchen, enable light');
@@ -209,6 +209,10 @@ class Scenario_Living extends Dobby_Scenario {
 
                     $this->turnKitchenWindowLightOff();
                 }
+            }
+            if ($this->device('KitchenMotion')->last_value == '1') {
+                $this->set('kitchen_window_light_times', '0');
+                $this->set('kitchen_window_light_timer', '0');
             }
         }
     }
