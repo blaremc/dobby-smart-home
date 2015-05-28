@@ -171,12 +171,11 @@ class Scenario_Living extends Dobby_Scenario {
                     $this->set('enable_window_light', '1');
                     $this->set('kitchen_window_light_times', '0');
                     $this->set('kitchen_window_light_timer', '0');
-                    Minion_CLI::write('kitchen_window_light_timer' . ' ' . 0);
                 }
             } else {
+                Dobby::$log->add('No moving in kitchen, enable timer off');
                 $this->set('kitchen_window_light_times', $this->delays['kitchen_window_light']);
                 $this->set('kitchen_window_light_timer', '1');
-                Minion_CLI::write('kitchen_window_light_timer' . ' ' . 1);
             }
         }
     }
@@ -190,23 +189,18 @@ class Scenario_Living extends Dobby_Scenario {
                     $this->set('enable_window_light', '1');
                     $this->set('kitchen_window_light_times', $this->delays['kitchen_window_light_min']);
                     $this->set('kitchen_window_light_timer', '1');
-                    Minion_CLI::write('kitchen_window_light_timer' . ' ' . 1);
                 }
             }
         }
     }
 
     protected function checkOff() {
-        Minion_CLI::write('enable_window_light_user =' . $this->get('enable_window_light_user'));
-        Minion_CLI::write('enable_window_light =' . $this->get('enable_window_light'));
-        Minion_CLI::write('kitchen_window_light_timer =' . $this->get('kitchen_window_light_timer'));
-        Minion_CLI::write('kitchen_window_light_times =' . $this->get('kitchen_window_light_times'));
 
         if ($this->get('enable_window_light_user') != '1') {
             if ($this->get('enable_window_light') == '1' && $this->get('kitchen_window_light_timer') == '1') {
                 $this->set('kitchen_window_light_times', $this->get('kitchen_window_light_times') - 1);
                 if ($this->get('kitchen_window_light_times') <= 0) {
-
+                    Dobby::$log->add('Turn off light in Kitchen');
                     $this->turnKitchenWindowLightOff();
                 }
             }
