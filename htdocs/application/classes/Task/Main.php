@@ -26,7 +26,7 @@ class Task_Main extends Dobby_Minion_Task {
         $ind = rand(1, 10000);
         Dobby::$log->add('START Main Task [' . $ind . ']');
         $eventBus = new EventBus();
-        $iteration = 10000;
+        $iteration = 10;
         while (true) {
             $aPool = array();
             foreach ($devices as $device) {
@@ -58,7 +58,7 @@ class Task_Main extends Dobby_Minion_Task {
             $this->_checkControlFile();
             $iteration--;
             if ($iteration <= 0) {
-                $iteration = 10000;
+                $iteration = 10;
                 Dobby::$log->add('Working task [' . $ind . ']');
             }
         }
