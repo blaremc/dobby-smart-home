@@ -13,6 +13,7 @@ class Dobby_Log {
      */
     public function add($message, $type = Dobby_Log::INFO) {
 
+
         Database::instance()->prepare('INSERT INTO logs(type, message, create_date) VALUES(:type, :message, NOW())')
             ->bindValue(':type', $type)
             ->bindValue(':message', $message)

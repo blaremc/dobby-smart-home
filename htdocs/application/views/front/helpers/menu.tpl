@@ -8,6 +8,3 @@
 </ul>
 
 <div>Текущий профиль: <a href="/admin/schedules/{$profile.id_schedules}">{$profile.name}</a></div>
-<div class="js-log mini-log">
-
-</div>

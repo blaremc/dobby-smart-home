@@ -23,8 +23,10 @@ class Task_Main extends Dobby_Minion_Task {
      */
     protected function _main() {
         $devices = Device::getDevices();
-
+        $ind = rand(1, 10000);
+        Dobby::$log->add('START Main Task [' . $ind . ']');
         $eventBus = new EventBus();
+        $iteration = 10000;
         while (true) {
             $aPool = array();
             foreach ($devices as $device) {
@@ -35,7 +37,6 @@ class Task_Main extends Dobby_Minion_Task {
             $values = $this->_waitProcess($aPool);
             unset($aPool);
 
-            Kohana::$log->add(LOG::TASK, print_r($values,true));
             foreach ($values as $key => $value) {
 
                 $device = Device::factory(intval($key));
@@ -55,6 +56,11 @@ class Task_Main extends Dobby_Minion_Task {
             unset($device);
             unset($values);
             $this->_checkControlFile();
+            $iteration--;
+            if ($iteration <= 0) {
+                $iteration = 10000;
+                Dobby::$log->add('Working task [' . $ind . ']');
+            }
         }
     }
 
