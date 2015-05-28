@@ -96,3 +96,16 @@ ul.menu li a:hover {
     background-color: #555;
     border: 1px solid #777;
 }
+
+.mini-log {
+    height: 300px;
+    overflow: auto;
+}
+.mini-log div{
+    padding: 5px 0;
+    border-bottom: 1px solid #777;
+}
+.mini-log .date {
+    font-size: 10px;
+    display: block;
+}

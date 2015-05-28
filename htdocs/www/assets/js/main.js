@@ -143,6 +143,32 @@
                 }, 1000);
             });
         }
+
+        var logId = 0;
+
+        function getLog () {
+
+            var $log = $('.js-log');
+
+            $.post('/ajax/log', {logId: logId}, function (items) {
+
+                items = $.parseJSON(items);
+                if (items) {
+                    for (var i = 0; i < items.length; i++) {
+                        if (items[i].id_logs > logId) {
+                            logId = items[i].id_logs;
+
+                            $log.prepend('<div><span class="date">[' + items[i].date + ']</span><span class="message">' + items[i].message + '</span></div>')
+                        }
+                    }
+                }
+                setTimeout(function () {
+                    getLog()
+                }, 1000);
+            });
+        }
+
+        getLog();
     });
 
 })(jQuery);

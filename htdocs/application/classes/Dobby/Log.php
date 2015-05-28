@@ -20,4 +20,13 @@ class Dobby_Log {
 
     }
 
+    public function getList($logId) {
+
+        $items =  Database::instance()->prepare('SELECT * FROM logs WHERE id_logs > 0 ORDER BY id_logs LIMIT 30 ')
+            ->bindValue(':logid', $logId, PDO::PARAM_INT)
+            ->execute()
+            ->fetchAll();
+
+        return $items;
+    }
 }

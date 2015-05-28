@@ -67,7 +67,12 @@ Route::set('ajax_actions', 'ajax/actions(/<id>(/<action>))')
         'action' => 'index',
         'directory' => 'Ajax',
     ));
-
+Route::set('ajax_log', 'ajax/log')
+    ->defaults(array(
+        'controller' => 'Log',
+        'action' => 'index',
+        'directory' => 'Ajax',
+    ));
 
 Route::set('default', '(<controller>(/<action>))')
     ->defaults(array(
