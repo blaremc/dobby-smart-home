@@ -47,10 +47,11 @@ ul.menu li a:hover {
     border-right: 1px solid #444;
 }
 
-.logo {
+.logo a{
     color: #777;
     text-shadow: 0 0 1px #fff;
     font-size: 40px;
+    text-decoration: none;
 }
 
 .actions-block .action {

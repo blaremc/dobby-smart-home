@@ -3,7 +3,7 @@
     <div class="container well">
         <div class="row">
             <div class="col-md-2 menubar">
-                <div class="logo">Dobby</div>
+                <div class="logo"><a href="/">Dobby</a></div>
                 {include "front/helpers/menu.tpl"}
             </div>
             <div class="col-md-10" id="content">
