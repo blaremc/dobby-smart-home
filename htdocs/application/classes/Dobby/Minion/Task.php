@@ -3,7 +3,7 @@
 
 abstract class Dobby_Minion_Task extends Minion_Task {
 
-    const POOL_PROC_EXEC_TIME = 1;
+    const POOL_PROC_EXEC_TIME = 5;
 
 
     public function _startProcess(array &$aPool, $cmd, $key) {
