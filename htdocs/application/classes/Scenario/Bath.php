@@ -36,7 +36,7 @@ class Scenario_Bath extends Dobby_Scenario {
         'temperature' => array('type' => 'int', 'caption' => 'Температура воды'),
         'center_color' => array('type' => 'color', 'caption' => 'Цвет светодиодов'),
         'enable_main_light' => array('type' => 'bool', 'caption' => 'Включен главный свет'),
-        'fan_time' => array('type' => 'int', 'caption' => 'Время работы вентилятора в секундах')
+        'fan_time' => array('type' => 'int', 'caption' => 'Время работы вентилятора в минутах')
     );
 
     public function status($params) {
@@ -141,8 +141,14 @@ class Scenario_Bath extends Dobby_Scenario {
     }
 
     protected function update() {
-        if ((int)$this->get('fan_stoptime')< time()){
-            $this->device('BathroomRele')->setValue('2:0');
+        if ($this->get('fan_enable')) {
+            if ($this->get('fan_stoptime')) {
+                Dobby::$log->add('Fan Time ' . $this->get('fan_stoptime') . ' ' . time());
+                if ((int)$this->get('fan_stoptime') < time()) {
+                    $this->device('BathroomRele')->setValue('2:0');
+                    $this->set('fan_stoptime', null);
+                }
+            }
         }
     }
 
@@ -392,9 +398,10 @@ class Scenario_Bath extends Dobby_Scenario {
 
     protected function enableFan($fan_time) {
 
-        if ($this->get('fan_enable')) {
+        if ($this->get('fan_enable') && !($fan_time && $fan_time != -1)) {
             $this->set('fan_enable', null);
             $this->device('BathroomRele')->setValue('2:0');
+            $this->set('fan_stoptime', null);
         } else {
             $this->set('fan_enable', '1');
             $this->device('BathroomRele')->setValue('2:1');
