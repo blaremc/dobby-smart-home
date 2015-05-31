@@ -35,7 +35,7 @@ class Dobby_Log {
                 ->execute()
                 ->fetchAll();
         } else {
-            $items = Database::instance()->prepare('SELECT * FROM logs WHERE id_logs > :logid  ORDER BY id_logs LIMIT 30')
+            $items = Database::instance()->prepare('SELECT * FROM logs WHERE create_date > NOW( ) - INTERVAL 12 HOUR  ORDER BY id_logs')
                 ->bindValue(':logid', $logId, PDO::PARAM_INT)
                 ->execute()
                 ->fetchAll();

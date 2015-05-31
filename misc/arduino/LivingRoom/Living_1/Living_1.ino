@@ -262,9 +262,6 @@ void loop(void) {
   }
   
   LIGHTTIME++;
-   Serial.print(LIGHTTIME);
-   Serial.print(" "); 
-   Serial.println(LIGHTDELAY);
    
   if (LIGHTTIME >= LIGHTDELAY) {
    LIGHTTIME = 0;

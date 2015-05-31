@@ -1,4 +1,5 @@
 <?php defined('SYSPATH') or die('No direct script access.');
+
 class Scenario_Bath extends Dobby_Scenario {
 
 
@@ -10,6 +11,9 @@ class Scenario_Bath extends Dobby_Scenario {
     public $events = array(
         'BathDistance' => EventBus::DEVICE_CHANGE,
         'BathTemperature' => EventBus::DEVICE_CHANGE,
+        'BathMotion' => EventBus::DEVICE_CHANGE,
+        'BathroomLight' => EventBus::DEVICE_UPDATE
+
     );
 
     /**
@@ -21,16 +25,26 @@ class Scenario_Bath extends Dobby_Scenario {
         'name' => 'fillBath',
         'percent' => 100,
         'temperature' => 37,
-
+        'center_color' => null,
+        'enable_main_light' => 0,
+        'fan_enable' => false,
     );
 
     public $fields = array(
-        'name' => array('type' => array('fillBath', 'pullBath', 'setEmptyBath', 'setFullBath', 'openFaucets', 'closeFaucets', 'openSink', 'closeSink'), 'caption' => 'Операция'),
+        'name' => array('type' => array('fillBath', 'pullBath', 'setEmptyBath', 'setFullBath', 'openFaucets', 'closeFaucets', 'openSink', 'closeSink', 'enableFan', 'setLight'), 'caption' => 'Операция'),
         'percent' => array('type' => 'int', 'caption' => 'Процент заполнения ванны'),
         'temperature' => array('type' => 'int', 'caption' => 'Температура воды'),
+        'center_color' => array('type' => 'color', 'caption' => 'Цвет светодиодов'),
+        'enable_main_light' => array('type' => 'bool', 'caption' => 'Включен главный свет'),
+        'fan_time' => array('type' => 'int', 'caption' => 'Время работы вентилятора в секундах')
     );
-    public function status($params) {
 
+    public function status($params) {
+        return array(
+            'center_color' => $this->get('center_color'),
+            'enable_main_light' => $this->get('enable_main_light'),
+            'fan_enable' => $this->get('fan_enable'),
+        );
     }
 
 
@@ -74,6 +88,13 @@ class Scenario_Bath extends Dobby_Scenario {
             case 'closeSink':
                 $this->execCloseSinc();
                 break;
+
+            case 'enableFan':
+                $this->enableFan($params['fan_time']);
+                break;
+            case 'setLight':
+                $this->setLight($params, $switcher);
+                break;
         }
     }
 
@@ -92,6 +113,7 @@ class Scenario_Bath extends Dobby_Scenario {
     /**
      * @param $event
      * @param $device
+     *
      * @return mixed|void
      */
     public function event($event, $device) {
@@ -108,6 +130,19 @@ class Scenario_Bath extends Dobby_Scenario {
             case 'BathTemperature':
                 $this->temperatureChange();
                 break;
+
+            case 'BathMotion':
+                Dobby::$log->add('Detected movement in bathroom');
+                break;
+            case 'BathroomLight':
+                $this->update();
+                break;
+        }
+    }
+
+    protected function update() {
+        if ((int)$this->get('fan_stoptime')< time()){
+            $this->device('BathroomRele')->setValue('2:0');
         }
     }
 
@@ -187,7 +222,7 @@ class Scenario_Bath extends Dobby_Scenario {
      */
     protected function checkFillBath() {
 
-        Minion_CLI::write($this->device('BathDistance')->last_value.' <= '.$this->get('need_distance').' && '.$this->get('filling'));
+        Minion_CLI::write($this->device('BathDistance')->last_value . ' <= ' . $this->get('need_distance') . ' && ' . $this->get('filling'));
         if ($this->device('BathDistance')->last_value <= $this->get('need_distance') && $this->get('filling')) {
             $this->completeFill();
         }
@@ -218,6 +253,7 @@ class Scenario_Bath extends Dobby_Scenario {
 
     /**
      * Закрываем краны
+     *
      * @param $seconds
      */
     protected function closeFaucets($seconds) {
@@ -245,6 +281,7 @@ class Scenario_Bath extends Dobby_Scenario {
 
     /**
      * Открываем краны
+     *
      * @param $seconds
      */
     protected function openFaucets($seconds) {
@@ -316,7 +353,55 @@ class Scenario_Bath extends Dobby_Scenario {
                 $this->closeFaucet('BathWaterCold', $seconds);
             }
         }
+    }
 
+    protected function setLight($params, $switcher) {
 
+        if (!is_null($params['center_color'])) {
+
+            if ($switcher == '1') {
+                $value = $this->get('center_color');
+                $value = $value == 'rgb(0, 0, 0)' ? $params['center_color'] : 'rgb(0, 0, 0)';
+                preg_match_all('/([\d]+)/', $value, $matches);
+                $matches = $matches[0];
+                $vals = implode(':', $matches);
+                $this->device('BedroomLeds')->setValue('1:' . $vals);
+                $this->set('center_color', $value);
+            } else {
+                preg_match_all('/([\d]+)/', $params['center_color'], $matches);
+                $matches = $matches[0];
+                $value = implode(':', $matches);
+                $this->device('BedroomLeds')->setValue('1:' . $value);
+                $this->set('center_color', $params['center_color']);
+            }
+        }
+
+        if ($params['enable_main_light'] != -1) {
+            if ($switcher == '1') {
+                $value = $this->get('enable_main_light');
+                $value = $value == '1' ? '0' : '1';
+                $this->device('BathroomRele')->setValue('1:' . $value);
+                $this->set('enable_main_light', $value);
+            } else {
+                $this->device('BathroomRele')->setValue('1:' . $params['enable_main_light']);
+                $this->set('enable_main_light', $params['enable_main_light']);
+            }
+        }
+
+    }
+
+    protected function enableFan($fan_time) {
+
+        if ($this->get('fan_enable')) {
+            $this->set('fan_enable', null);
+            $this->device('BathroomRele')->setValue('2:0');
+        } else {
+            $this->set('fan_enable', '1');
+            $this->device('BathroomRele')->setValue('2:1');
+            if ($fan_time && $fan_time != -1) {
+                $this->set('fan_stoptime', time() + $fan_time * 60);
+
+            }
+        }
     }
 }

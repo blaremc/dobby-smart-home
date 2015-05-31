@@ -25,12 +25,14 @@ class Controller_Ajax_Actions extends Controller_Ajax {
     }
 
     public function action_status() {
+
+        // Сравнивание результат функции status в сценарии с тем что указано при создании сценария
         $action = Action::factory($this->request->param('id'));
         $values = $action->status();
         $value = 0;
         foreach ($action->data as $key => $item) {
             if (!is_null($item) && $item != -1 && $key != 'name') {
-                if ($item != $values[$key]) {
+                if (array_key_exists($key, $values) && $item != $values[$key]) {
                     $value = 1;;
                 }
             }
