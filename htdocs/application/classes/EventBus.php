@@ -6,6 +6,7 @@ class EventBus {
     const DEVICE_CHANGE = 1;
     const DEVICE_UPDATE = 2;
     const SCENARIO_COMPLETE = 3;
+    const TIME = 4;
 
     /**
      * @var Dobby_Scenario[][]
