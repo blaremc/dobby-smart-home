@@ -35,12 +35,14 @@ class Task_Main extends Dobby_Minion_Task {
             if ($device->is_active) {
                 $this->_startProcess($aPool, 'php ' . DOCROOT . '/index.php --task=Main --device=' . $device->id_devices, $device->id_devices);
             }
-            $eventBus->trigger(EventBus::TIME, $device);
         }
 
 
         while (true) {
 
+            foreach ($devices as $device) {
+                $eventBus->trigger(EventBus::TIME, $device);
+            }
 
             // Ожидание получения данных
             usleep(100);
