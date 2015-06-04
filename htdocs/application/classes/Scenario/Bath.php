@@ -89,7 +89,7 @@ class Scenario_Bath extends Dobby_Scenario {
                 break;
 
             case 'enableFan':
-                $this->enableFan($params['fan_time']);
+                $this->enableFan(isset($params['fan_time']) ? $params['fan_time'] : null);
                 break;
             case 'setLight':
                 $this->setLight($params, $switcher);
@@ -413,7 +413,6 @@ class Scenario_Bath extends Dobby_Scenario {
         if ($this->get('fan_enable')) {
 
             if ($this->get('fan_stoptime')) {
-                Dobby::$log->add('FAN CHECK STOP TIME ' . date('d.m.Y H:i:s', time()));
                 if ((int)$this->get('fan_stoptime') < time()) {
                     $this->device('BathroomRele')->setValue('2:0');
                     $this->set('fan_stoptime', null);
