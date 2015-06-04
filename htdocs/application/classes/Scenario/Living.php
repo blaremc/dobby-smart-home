@@ -36,7 +36,7 @@ class Scenario_Living extends Dobby_Scenario {
     );
 
     protected $delays = array(
-        'kitchen_window_light' => 150, // Максимальная задержка при входе на кухню
+        'kitchen_window_light' => 150, // Максимальная задержка при входе на кухню в секундах
         'kitchen_window_light_min' => 10 // Задержка подсветки кухни при входе в гостинную
     );
 
@@ -174,7 +174,7 @@ class Scenario_Living extends Dobby_Scenario {
                 }
             } else {
                 Dobby::$log->add('No moving in kitchen, enable timer off');
-                $this->set('kitchen_window_light_times', $this->delays['kitchen_window_light']);
+                $this->set('kitchen_window_light_times', time() + $this->delays['kitchen_window_light']);
                 $this->set('kitchen_window_light_timer', '1');
             }
         }
@@ -187,7 +187,7 @@ class Scenario_Living extends Dobby_Scenario {
                     Dobby::$log->add('Detected move in living room, enable light in Kitchen');
                     $this->device('KitchenLights')->setValue('1:1');
                     $this->set('enable_window_light', '1');
-                    $this->set('kitchen_window_light_times', $this->delays['kitchen_window_light_min']);
+                    $this->set('kitchen_window_light_times',  time() + $this->delays['kitchen_window_light_min']);
                     $this->set('kitchen_window_light_timer', '1');
                 }
             }
@@ -198,8 +198,7 @@ class Scenario_Living extends Dobby_Scenario {
 
         if ($this->get('enable_window_light_user') != '1') {
             if ($this->get('enable_window_light') == '1' && $this->get('kitchen_window_light_timer') == '1') {
-                $this->set('kitchen_window_light_times', $this->get('kitchen_window_light_times') - 1);
-                if ($this->get('kitchen_window_light_times') <= 0) {
+                if ($this->get('kitchen_window_light_times') <= time()) {
                     Dobby::$log->add('Turn off light in Kitchen');
                     $this->turnKitchenWindowLightOff();
                 }

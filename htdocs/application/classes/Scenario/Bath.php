@@ -12,8 +12,7 @@ class Scenario_Bath extends Dobby_Scenario {
         'BathDistance' => EventBus::DEVICE_CHANGE,
         'BathTemperature' => EventBus::DEVICE_CHANGE,
         'BathMotion' => EventBus::DEVICE_CHANGE,
-        'BathroomLight' => EventBus::DEVICE_UPDATE
-
+        'BathroomLight' => EventBus::TIME,
     );
 
     /**
@@ -118,6 +117,10 @@ class Scenario_Bath extends Dobby_Scenario {
      */
     public function event($event, $device) {
 
+        if ($event == EventBus::TIME) {
+            $this->update();
+            return;
+        }
         if (!$this->get('is_execute')) {
             return;
         }
@@ -134,22 +137,12 @@ class Scenario_Bath extends Dobby_Scenario {
             case 'BathMotion':
                 Dobby::$log->add('Detected movement in bathroom');
                 break;
-            case 'BathroomLight':
-                $this->update();
-                break;
         }
     }
 
     protected function update() {
-        if ($this->get('fan_enable')) {
-            if ($this->get('fan_stoptime')) {
-                Dobby::$log->add('Fan Time ' . $this->get('fan_stoptime') . ' ' . time());
-                if ((int)$this->get('fan_stoptime') < time()) {
-                    $this->device('BathroomRele')->setValue('2:0');
-                    $this->set('fan_stoptime', null);
-                }
-            }
-        }
+        $this->checkFan();
+
     }
 
 
@@ -398,16 +391,34 @@ class Scenario_Bath extends Dobby_Scenario {
 
     protected function enableFan($fan_time) {
 
+
+        Dobby::$log->add('toggle fan [' . $fan_time . ']');
         if ($this->get('fan_enable') && !($fan_time && $fan_time != -1)) {
+            Dobby::$log->add('FAN OFF1');
             $this->set('fan_enable', null);
             $this->device('BathroomRele')->setValue('2:0');
             $this->set('fan_stoptime', null);
         } else {
             $this->set('fan_enable', '1');
+            Dobby::$log->add('FAN ON');
             $this->device('BathroomRele')->setValue('2:1');
             if ($fan_time && $fan_time != -1) {
                 $this->set('fan_stoptime', time() + $fan_time * 60);
+                Dobby::$log->add('FAN SET STOP TIME ' . date('d.m.Y H:i:s', $this->get('fan_stoptime')));
+            }
+        }
+    }
 
+    protected function checkFan() {
+        if ($this->get('fan_enable')) {
+
+            if ($this->get('fan_stoptime')) {
+                Dobby::$log->add('FAN CHECK STOP TIME ' . date('d.m.Y H:i:s', time()));
+                if ((int)$this->get('fan_stoptime') < time()) {
+                    $this->device('BathroomRele')->setValue('2:0');
+                    $this->set('fan_stoptime', null);
+                    Dobby::$log->add('FAN OFF2');
+                }
             }
         }
     }

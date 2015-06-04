@@ -35,6 +35,7 @@ class Task_Main extends Dobby_Minion_Task {
             if ($device->is_active) {
                 $this->_startProcess($aPool, 'php ' . DOCROOT . '/index.php --task=Main --device=' . $device->id_devices, $device->id_devices);
             }
+            $eventBus->trigger(EventBus::TIME, $device);
         }
 
 
@@ -84,7 +85,7 @@ class Task_Main extends Dobby_Minion_Task {
                         Kohana::$log->add(Log::TASK, "Процесс {$key} завис и будет  завершён принудительно");
                         $value = "Process not respond {$key}";
                         proc_terminate($aProcess['handler'], 15);
-                        Dobby::$log->add($value);
+//                        Dobby::$log->add($value);
                         $device = Device::factory(intval($key));
                         $eventBus->trigger(EventBus::DEVICE_UPDATE, $device);
                         $device->setError($value);
