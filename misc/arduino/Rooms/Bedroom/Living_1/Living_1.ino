@@ -5,8 +5,8 @@
 #include <dht.h>
 
 // Ethernet Configuration
-byte mac[] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x16 };
-IPAddress ip(192,168,1,16);
+byte mac[] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x15 };
+IPAddress ip(192,168,1,15);
 EthernetServer server(80);
 #define REQUESTSIZE 30
 
@@ -228,7 +228,7 @@ void act(){
     return;
   } 
   
-  client.println("Kitchen Arduino");    
+  client.println("Hall Arduino");    
   client.println("Version 1.0");    
 
   
@@ -357,8 +357,6 @@ void loop(void) {
     delay(1);
     client.stop();
   }
-  //getTemperature();
- // delay(2000);
 }
 
 
