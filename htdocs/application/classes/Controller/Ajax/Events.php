@@ -6,11 +6,12 @@ class Controller_Ajax_Events extends Controller_Ajax
 
     public function action_index()
     {
-
-
-        //Device::factory();
-
-        Kohana::$log->add(Log::TASK, print_r($_GET, true));
-        Kohana::$log->add(Log::TASK, print_r($_SERVER, true));
+        $eventBus = new EventBus();
+        $device = Device::factory(Device::getDeviceByAddress('http://' . $_SERVER['REMOTE_ADDR'] . '/' . $_GET['device']));
+        $device->setLastValue($_GET['value']);
+        Dobby::$log->add('http://' . $_SERVER['REMOTE_ADDR'] . '/' . $_GET['device'] . '  (' . $_GET['value'] . ')');
+        if ($device->is_changed) {
+            $eventBus->trigger(EventBus::DEVICE_CHANGE, $device);
+        }
     }
 }
