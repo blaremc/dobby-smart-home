@@ -50,7 +50,6 @@ class Scenario_Bedroom extends Dobby_Scenario {
 
         switch ($device->name) {
             case 'BedroomIR':
-
                 $this->recieveIR();
                 break;
 
@@ -122,14 +121,14 @@ class Scenario_Bedroom extends Dobby_Scenario {
         }
         if ($params['enable_window_light'] != -1) {
             if ($switcher == '1') {
-                $this->toggleMainLight();
+                $this->toggleWindowLight();
             } else {
                 $this->setWindowLight($params['enable_window_light']);
             }
         }
     }
 
-    protected function toggleMainLight(){
+    protected function toggleWindowLight(){
         $value = $this->get('enable_window_light');
         $value = $value == '1' ? '0' : '1';
         $this->setWindowLight($value);
