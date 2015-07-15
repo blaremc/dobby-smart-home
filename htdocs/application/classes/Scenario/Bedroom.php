@@ -75,7 +75,7 @@ class Scenario_Bedroom extends Dobby_Scenario {
             $this->toggleMainLight();
         }
         if ($value == '1_3137896575') {
-            $this->toggleMainLight();
+            $this->toggleWindowLight();
         }
         if ($value == '1_3137880255') {
             $this->setMainLight('0');
