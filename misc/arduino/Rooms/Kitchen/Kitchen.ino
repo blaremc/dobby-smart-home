@@ -1,13 +1,24 @@
+#include <Dhcp.h>
+#include <Dns.h>
+#include <Ethernet.h>
+#include <EthernetClient.h>
+#include <EthernetServer.h>
+#include <EthernetUdp.h>
+
 
 #include <IRremote.h>
 #include <SPI.h>
 #include <Ethernet.h>
-#include <dht.h>
 
 // Ethernet Configuration
-byte mac[] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x15 };
-IPAddress ip(192,168,1,15);
+byte mac[] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x16 };
+IPAddress ip(192,168,1,16);
 EthernetServer server(80);
+EthernetClient client;
+
+byte SERVER[] = { 192, 168, 1, 4 };
+EthernetClient client_get;
+
 #define REQUESTSIZE 30
 
 
@@ -38,6 +49,7 @@ byte LED2GREENVALUE = 0;
 byte LED2BLUEVALUE = 0;
 byte LED2SMOOTH = 0;
 
+char buf[80];
 
 #define LED2REDPIN 9
 #define LED2GREENPIN 10
@@ -79,16 +91,16 @@ unsigned long codeValue; // The code value if not raw
 unsigned int rawCodes[RAWBUF]; // The durations if raw
 int codeLen; // The length of the code
 int toggle = 0; // The RC5/6 toggle state
-DHT sensor = DHT();
+char ipbuff[16];
 
-EthernetClient client;
+
+
 
 void setup(void) {
-  Ethernet.begin(mac,ip);
+  Ethernet.begin(mac, ip);
   server.begin();
   Serial.begin(9600); 
   irrecv.enableIRIn();
-sensor.attach(A0);
   pinMode(LED1REDPIN, OUTPUT);
   pinMode(LED1GREENPIN, OUTPUT);
   pinMode(LED1BLUEPIN, OUTPUT);
@@ -102,7 +114,6 @@ sensor.attach(A0);
   pinMode(RELE2PIN, OUTPUT);
   digitalWrite(RELE1PIN, LOW); 
   digitalWrite(RELE2PIN, LOW); 
-  
 }
 
 void act(){
@@ -142,14 +153,7 @@ void act(){
     }
     return;
   }
-  if (strcmp(METHOD, "getTemperature") == 0){  
-    getTemperature();
-    client.print(TEMPERATUREVALUE);    
-    client.print("C ");    
-    client.print(HUMIDITYVALUE);    
-    client.print("%");    
-    return;
-  } 
+
   if (strcmp(METHOD, "getLight") == 0){  
     client.println(LIGHTVALUE);   
    return; 
@@ -164,24 +168,9 @@ void act(){
     
     client.println(codeType);
     client.println(codeValue);
-        return;
- /*
-    for (int i =0; i<10; i++){
-      client.print(IRCOMMANDS[i]);
-      client.print(" ");
-    } */    
-  }
- /*
-  if (strcmp(METHOD,  "setIR")== 0){  
-    Serial.println("setIR");
-    Serial.println(PARAMS[0]);
-//    irsend.sendNEC(PARAMS[0].toInt(), 32);   
-    Serial.println("Sending...");
-    sendCode(0);
-    Serial.println("OK");
-      irrecv.resume(); 
-  }
-  */
+    return;
+ }
+
 
   if (strcmp(METHOD, "getLed") == 0){  
     if (atoi(PARAMS[0]) == 1){
@@ -228,10 +217,16 @@ void act(){
     return;
   } 
   
-  client.println("Hall Arduino");    
-  client.println("Version 1.0");    
-
-  
+  client.println("Kitchen Arduino");
+  client.println("Version 1.3");
+  client.print("MOTION = ");
+  client.println(MOTIONVALUE);
+  client.print("LIGHT = ");
+  client.println(LIGHTVALUE);
+  client.print("IR = ");
+  client.print(codeType);
+  client.print("_");
+  client.println(codeValue);
 }
 
 
@@ -250,12 +245,21 @@ void loop(void) {
   byte motion_value = digitalRead(MOTIONPIN);
   if (motion_value == 1){
     MOTIONTIME = MOTIONDELAY;
-    MOTIONVALUE = 1;
- 
+    if (MOTIONVALUE == 0){
+      sprintf(buf, "GET /ajax/events/?device=%s&value=%i", "motion", 1);   
+      sentValueToServer();
+    }
+    MOTIONVALUE = 1; 
+       
+    
   } else {
     if (MOTIONTIME>0){
       MOTIONTIME --;
       if (MOTIONTIME <=0){
+         if (MOTIONVALUE == 1){
+          sprintf(buf, "GET /ajax/events/?device=%s&value=%i", "motion", 0);   
+          sentValueToServer();
+        }
         MOTIONVALUE = 0;
       }
     }
@@ -264,20 +268,26 @@ void loop(void) {
   LIGHTTIME++;
    
   if (LIGHTTIME >= LIGHTDELAY) {
-   LIGHTTIME = 0;
-   LIGHTVALUE = analogRead(LIGHTPIN);
+     LIGHTTIME = 0;
+     
+     int TEMPVALUE = analogRead(LIGHTPIN);
+     if (abs(TEMPVALUE - LIGHTVALUE)>30) {      
+        sprintf(buf, "GET /ajax/events/?device=%s&value=%i", "light",(int)LIGHTVALUE);   
+        sentValueToServer();
+        LIGHTVALUE = TEMPVALUE;
+     }
    }
   
   
   // ИК приемник
   if (irrecv.decode(&results)) // Если данные пришли 
   {
-    Serial.println(results.value, HEX); // Отправляем полученную данную в консоль
+    
     for (int i=0; i<9; i++){
       IRCOMMANDS[i] = IRCOMMANDS[i+1];
     }    
     IRCOMMANDS[9] = results.value;
-     storeCode(&results);
+    storeCode(&results);
     irrecv.resume(); // Принимаем следующую команду
   }
   
@@ -331,7 +341,7 @@ void loop(void) {
      if (client.available()) {
         char c = client.read();        
         if (c == '\n' && currentLineIsBlank) {
-          Serial.println(request);
+    
            char* buf =getRequest(request);
            strcpy(request,buf);
            sendHeaders(client);          
@@ -359,6 +369,32 @@ void loop(void) {
   }
 }
 
+void sentValueToServer(){
+
+    client_get.stop();    
+    Serial.println("connecting...");
+    int ret = client_get.connect(SERVER, 80);    
+  if (ret) {
+    Serial.println("connected");
+    // Make a HTTP request:
+   client_get.print(buf);
+   client_get.println(" HTTP/1.0");
+   client_get.println("Host: 192.168.1.4");
+   client_get.println(ipbuff); // ip адрес нашего контроллера в текстовом виде
+   client_get.print("Content-Type: text/html\n");
+   client_get.println("Connection: close\n");
+   delay(2000);
+   client_get.stop();
+  }
+  else {
+    // kf you didn't get a connection to the server:
+    Serial.println("connection failed");
+    Serial.print("Error: ");
+    Serial.println(ret);
+    Serial.println(client_get.status());
+  }
+}
+
 
 void sendHeaders(EthernetClient client){
      // send a standard http response header
@@ -381,31 +417,18 @@ char *getRequest(char *request) {
 
 
 void parseRequest(char *request){
-   Serial.print("request2=");
-    Serial.println(request);
-    strcpy(request , request);
+  strcpy(request , request);
   char *pos= strtok(request,":");
-  Serial.println(request);
-  Serial.println(pos);
    if (!pos){
      strcpy(METHOD , request);
    }else {
      strcpy(METHOD , pos);
    }
    
- 
    for (int i=0; i<PARAMSSIZE; i++){
      memset(PARAMS[i], 0, sizeof PARAMS[i]);
 
-   }
-   
-   Serial.print("METHOD='");
-   Serial.print(METHOD);
-   Serial.println("'"); 
-  
-  
-   Serial.println(request); 
-   
+   }   
    int ind = 0;
   
     pos = strtok(NULL,":");
@@ -413,48 +436,12 @@ void parseRequest(char *request){
    if (pos!=NULL){
      while (pos!=NULL){
        strcpy(PARAMS[ind] , pos);       
-       pos = strtok(NULL,":");
-          
-       Serial.print("PARAMS[");
-       Serial.print(ind);
-       Serial.print("]=");
-       Serial.println(PARAMS[ind]);
+       pos = strtok(NULL,":");          
        ind++;
      }
    }
 }
 
-void getTemperature(){
-  
-  // метод update заставляет сенсор выдать текущие измерения
-    sensor.update();
- 
-    switch (sensor.getLastError())
-    {
-        case DHT_ERROR_OK:
-    
-             char msg[128];
-            // данные последнего измерения можно считать соответствующими
-            // методами
-            sprintf(msg, "Temperature = %dC, Humidity = %d%%", 
-                    sensor.getTemperatureInt(), sensor.getHumidityInt());
-            Serial.println(msg);
-            break;
-        case DHT_ERROR_START_FAILED_1:
-            Serial.println("Error: start failed (stage 1)");
-            break;
-        case DHT_ERROR_START_FAILED_2:
-            Serial.println("Error: start failed (stage 2)");
-            break;
-        case DHT_ERROR_READ_TIMEOUT:
-            Serial.println("Error: read timeout");
-            break;
-        case DHT_ERROR_CHECKSUM_FAILURE:
-            Serial.println("Error: checksum error");
-            break;
-    }
- 
-}
 
 void storeCode(decode_results *results) {
   codeType = results->decode_type;
@@ -507,50 +494,9 @@ void storeCode(decode_results *results) {
     Serial.println(results->value, HEX);
     codeValue = results->value;
     codeLen = results->bits;
-  }
-}
-
-
-void sendCode(int repeat) {
-  if (codeType == NEC) {
-    if (repeat) {
-      irsend.sendNEC(REPEAT, codeLen);
-      Serial.println("Sent NEC repeat");
-    } 
-    else {
-      irsend.sendNEC(codeValue, codeLen);
-      Serial.print("Sent NEC ");
-      Serial.println(codeValue, HEX);
-    }
-  } 
-  else if (codeType == SONY) {
-    irsend.sendSony(codeValue, codeLen);
-    Serial.print("Sent Sony ");
-    Serial.println(codeValue, HEX);
-  } 
-  else if (codeType == RC5 || codeType == RC6) {
-    if (!repeat) {
-      // Flip the toggle bit for a new button press
-      toggle = 1 - toggle;
-    }
-    // Put the toggle bit into the code to send
-    codeValue = codeValue & ~(1 << (codeLen - 1));
-    codeValue = codeValue | (toggle << (codeLen - 1));
-    if (codeType == RC5) {
-      Serial.print("Sent RC5 ");
-      Serial.println(codeValue, HEX);
-      irsend.sendRC5(codeValue, codeLen);
-    } 
-    else {
-      irsend.sendRC6(codeValue, codeLen);
-      Serial.print("Sent RC6 ");
-      Serial.println(codeValue, HEX);
-    }
-  } 
-  else if (codeType == UNKNOWN /* i.e. raw */) {
-    // Assume 38 KHz
-    irsend.sendRaw(rawCodes, codeLen, 38);
-    Serial.println("Sent raw");
+    // Send data to server
+    sprintf(buf, "GET /ajax/events/?device=%s&value=%i_%lu", "ir",codeType,(int)codeValue);   
+    sentValueToServer();    
   }
 }
 

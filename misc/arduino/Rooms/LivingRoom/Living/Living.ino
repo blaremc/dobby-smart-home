@@ -218,7 +218,7 @@ void act(){
   } 
   
   client.println("Living Arduino");
-  client.println("Version 1.2");
+  client.println("Version 1.3");
   client.print("MOTION = ");
   client.println(MOTIONVALUE);
   client.print("LIGHT = ");
@@ -383,7 +383,7 @@ void sentValueToServer(){
    client_get.println(ipbuff); // ip адрес нашего контроллера в текстовом виде
    client_get.print("Content-Type: text/html\n");
    client_get.println("Connection: close\n");
-   delay(500);
+   delay(2000);
    client_get.stop();
   }
   else {
