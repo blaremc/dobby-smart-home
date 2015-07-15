@@ -1,14 +1,24 @@
+#include <Dhcp.h>
+#include <Dns.h>
+#include <Ethernet.h>
+#include <EthernetClient.h>
+#include <EthernetServer.h>
+#include <EthernetUdp.h>
 
+
+#include <IRremote.h>
 #include <SPI.h>
 #include <Ethernet.h>
 
-// подключаем библиотеку
-#include <dht.h>
-
 // Ethernet Configuration
-byte mac[] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x16 };
-IPAddress ip(192,168,1,16);
+byte mac[] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x15 };
+IPAddress ip(192,168,1,15);
 EthernetServer server(80);
+EthernetClient client;
+
+byte SERVER[] = { 192, 168, 1, 4 };
+EthernetClient client_get;
+
 #define REQUESTSIZE 30
 
 
@@ -39,12 +49,13 @@ byte LED2GREENVALUE = 0;
 byte LED2BLUEVALUE = 0;
 byte LED2SMOOTH = 0;
 
+char buf[80];
 
 #define LED2REDPIN 9
 #define LED2GREENPIN 10
 #define LED2BLUEPIN 11
 
-#define TEMPPIN 0
+
 
 
 #define LIGHTPIN 1 // сенсор света
@@ -54,45 +65,55 @@ byte LED2SMOOTH = 0;
 #define RELE1PIN 7 // Реле 1
 #define RELE2PIN 4 // Реле 2
 
+IRrecv irrecv(IRRPIN);
+decode_results results;
+long IRCOMMANDS[10];
+
+IRsend irsend;
+
 
 byte MOTIONVALUE = 0;
 int MOTIONTIME = 0;
 int MOTIONDELAY = 1000;
 
+int LIGHTVALUE = -1;
+int LIGHTTIME = 0;
+int LIGHTDELAY = 300;
+
+int TEMPERATUREVALUE = 0;
+int HUMIDITYVALUE = 0;
 byte RELE1VALUE = 1;
 byte RELE2VALUE = 1;
 
-int TEMPVALUE = 0;
-int HUMIDITYVALUE = 0;
-// создаём объект-сенсор
-DHT sensor = DHT();
-
 // Storage for the recorded code
 int codeType = -1; // The type of code
+unsigned long codeValue; // The code value if not raw
+unsigned int rawCodes[RAWBUF]; // The durations if raw
 int codeLen; // The length of the code
 int toggle = 0; // The RC5/6 toggle state
+char ipbuff[16];
 
 
-EthernetClient client;
+
 
 void setup(void) {
-  Ethernet.begin(mac,ip);
+  Ethernet.begin(mac, ip);
   server.begin();
   Serial.begin(9600); 
-   pinMode(LED1REDPIN, OUTPUT);
+  irrecv.enableIRIn();
+  pinMode(LED1REDPIN, OUTPUT);
   pinMode(LED1GREENPIN, OUTPUT);
   pinMode(LED1BLUEPIN, OUTPUT);
   pinMode(LED2REDPIN, OUTPUT);
   pinMode(LED2GREENPIN, OUTPUT);
   pinMode(LED2BLUEPIN, OUTPUT);
-  sensor.attach(A0);
+  
   pinMode(LIGHTPIN, OUTPUT);
   pinMode(MOTIONPIN, INPUT);
   pinMode(RELE1PIN, OUTPUT);
   pinMode(RELE2PIN, OUTPUT);
   digitalWrite(RELE1PIN, LOW); 
   digitalWrite(RELE2PIN, LOW); 
-  
 }
 
 void act(){
@@ -120,7 +141,9 @@ void act(){
         digitalWrite(RELE2PIN, LOW); 
       }
     }
+    return;
   }
+  
   if (strcmp(METHOD, "getRele") == 0){  
     if (atoi(PARAMS[0])==1){
       client.println(RELE1VALUE);  
@@ -128,24 +151,27 @@ void act(){
     if (atoi(PARAMS[0])==2){
       client.println(RELE2VALUE);   
     }
+    return;
   }
-  if (strcmp(METHOD, "getTemperature") == 0){  
-    
-    getTemperature();
-    client.print(TEMPVALUE);    
-    client.print("C ");    
-    client.print(HUMIDITYVALUE);    
-    client.println("%");
-  }  
-  
-  
+
   if (strcmp(METHOD, "getLight") == 0){  
-    client.println(analogRead(LIGHTPIN));    
+    client.println(LIGHTVALUE);   
+   return; 
+   
   }  
   if (strcmp(METHOD,  "getMotion")== 0){  
     client.println(MOTIONVALUE);    
+    return;
   }
   
+  if (strcmp(METHOD,  "getIR")== 0){  
+    
+    client.println(codeType);
+    client.println(codeValue);
+    return;
+ }
+
+
   if (strcmp(METHOD, "getLed") == 0){  
     if (atoi(PARAMS[0]) == 1){
       client.print(LED1REDTARGET);
@@ -161,6 +187,7 @@ void act(){
       client.print(":");
       client.println(LED2BLUETARGET);
     }
+    return;
   }  
   
   if (strcmp(METHOD, "setLed")== 0){
@@ -187,9 +214,19 @@ void act(){
          LED2SMOOTH = 1; 
         } 
     }
-    
+    return;
   } 
   
+  client.println("Living Arduino");
+  client.println("Version 1.2");
+  client.print("MOTION = ");
+  client.println(MOTIONVALUE);
+  client.print("LIGHT = ");
+  client.println(LIGHTVALUE);
+  client.print("IR = ");
+  client.print(codeType);
+  client.print("_");
+  client.println(codeValue);
 }
 
 
@@ -208,15 +245,50 @@ void loop(void) {
   byte motion_value = digitalRead(MOTIONPIN);
   if (motion_value == 1){
     MOTIONTIME = MOTIONDELAY;
-    MOTIONVALUE = 1;
- 
+    if (MOTIONVALUE == 0){
+      sprintf(buf, "GET /ajax/events/?device=%s&value=%i", "motion", 1);   
+      sentValueToServer();
+    }
+    MOTIONVALUE = 1; 
+       
+    
   } else {
     if (MOTIONTIME>0){
       MOTIONTIME --;
       if (MOTIONTIME <=0){
+         if (MOTIONVALUE == 1){
+          sprintf(buf, "GET /ajax/events/?device=%s&value=%i", "motion", 0);   
+          sentValueToServer();
+        }
         MOTIONVALUE = 0;
       }
     }
+  }
+  
+  LIGHTTIME++;
+   
+  if (LIGHTTIME >= LIGHTDELAY) {
+     LIGHTTIME = 0;
+     
+     int TEMPVALUE = analogRead(LIGHTPIN);
+     if (abs(TEMPVALUE - LIGHTVALUE)>30) {      
+        sprintf(buf, "GET /ajax/events/?device=%s&value=%i", "light",(int)LIGHTVALUE);   
+        sentValueToServer();
+        LIGHTVALUE = TEMPVALUE;
+     }
+   }
+  
+  
+  // ИК приемник
+  if (irrecv.decode(&results)) // Если данные пришли 
+  {
+    
+    for (int i=0; i<9; i++){
+      IRCOMMANDS[i] = IRCOMMANDS[i+1];
+    }    
+    IRCOMMANDS[9] = results.value;
+    storeCode(&results);
+    irrecv.resume(); // Принимаем следующую команду
   }
   
   
@@ -264,16 +336,12 @@ void loop(void) {
      char request[REQUESTSIZE];
      byte reqInd = 0;
      boolean currentLineIsBlank = true;
-     int connectLoop = 0;
-
-     while (client.connected() && connectLoop<10000) {
+     while (client.connected()) {
 
      if (client.available()) {
-        connectLoop = 0;
-
         char c = client.read();        
         if (c == '\n' && currentLineIsBlank) {
-          Serial.println(request);
+    
            char* buf =getRequest(request);
            strcpy(request,buf);
            sendHeaders(client);          
@@ -295,38 +363,36 @@ void loop(void) {
           currentLineIsBlank = false;
         }
       }
-      connectLoop++;
-
     }
     delay(1);
     client.stop();
   }
 }
 
-void getTemperature(){
-  
-   // метод update заставляет сенсор выдать текущие измерения
-    sensor.update();
- 
-    switch (sensor.getLastError())
-    {
-        case DHT_ERROR_OK:
-            TEMPVALUE = sensor.getTemperatureInt();
-            HUMIDITYVALUE = sensor.getHumidityInt();       
-            break;
-        case DHT_ERROR_START_FAILED_1:
-            Serial.println("Error: start failed (stage 1)");
-            break;
-        case DHT_ERROR_START_FAILED_2:
-            Serial.println("Error: start failed (stage 2)");
-            break;
-        case DHT_ERROR_READ_TIMEOUT:
-            Serial.println("Error: read timeout");
-            break;
-        case DHT_ERROR_CHECKSUM_FAILURE:
-            Serial.println("Error: checksum error");
-            break;
-    }
+void sentValueToServer(){
+
+    client_get.stop();    
+    Serial.println("connecting...");
+    int ret = client_get.connect(SERVER, 80);    
+  if (ret) {
+    Serial.println("connected");
+    // Make a HTTP request:
+   client_get.print(buf);
+   client_get.println(" HTTP/1.0");
+   client_get.println("Host: 192.168.1.4");
+   client_get.println(ipbuff); // ip адрес нашего контроллера в текстовом виде
+   client_get.print("Content-Type: text/html\n");
+   client_get.println("Connection: close\n");
+   delay(500);
+   client_get.stop();
+  }
+  else {
+    // kf you didn't get a connection to the server:
+    Serial.println("connection failed");
+    Serial.print("Error: ");
+    Serial.println(ret);
+    Serial.println(client_get.status());
+  }
 }
 
 
@@ -351,31 +417,18 @@ char *getRequest(char *request) {
 
 
 void parseRequest(char *request){
-   Serial.print("request2=");
-    Serial.println(request);
-    strcpy(request , request);
+  strcpy(request , request);
   char *pos= strtok(request,":");
-  Serial.println(request);
-  Serial.println(pos);
    if (!pos){
      strcpy(METHOD , request);
    }else {
      strcpy(METHOD , pos);
    }
    
- 
    for (int i=0; i<PARAMSSIZE; i++){
      memset(PARAMS[i], 0, sizeof PARAMS[i]);
 
-   }
-   
-   Serial.print("METHOD='");
-   Serial.print(METHOD);
-   Serial.println("'"); 
-  
-  
-   Serial.println(request); 
-   
+   }   
    int ind = 0;
   
     pos = strtok(NULL,":");
@@ -383,16 +436,67 @@ void parseRequest(char *request){
    if (pos!=NULL){
      while (pos!=NULL){
        strcpy(PARAMS[ind] , pos);       
-       pos = strtok(NULL,":");
-          
-       Serial.print("PARAMS[");
-       Serial.print(ind);
-       Serial.print("]=");
-       Serial.println(PARAMS[ind]);
+       pos = strtok(NULL,":");          
        ind++;
      }
    }
 }
 
 
+void storeCode(decode_results *results) {
+  codeType = results->decode_type;
+  int count = results->rawlen;
+  if (codeType == UNKNOWN) {
+    Serial.println("Received unknown code, saving as raw");
+    codeLen = results->rawlen - 1;
+    // To store raw codes:
+    // Drop first value (gap)
+    // Convert from ticks to microseconds
+    // Tweak marks shorter, and spaces longer to cancel out IR receiver distortion
+    for (int i = 1; i <= codeLen; i++) {
+      if (i % 2) {
+        // Mark
+        rawCodes[i - 1] = results->rawbuf[i]*USECPERTICK - MARK_EXCESS;
+        Serial.print(" m");
+      } 
+      else {
+        // Space
+        rawCodes[i - 1] = results->rawbuf[i]*USECPERTICK + MARK_EXCESS;
+        Serial.print(" s");
+      }
+      Serial.print(rawCodes[i - 1], DEC);
+    }
+    Serial.println("");
+  }
+  else {
+    if (codeType == NEC) {
+      Serial.print("Received NEC: ");
+      if (results->value == REPEAT) {
+        // Don't record a NEC repeat value as that's useless.
+        Serial.println("repeat; ignoring.");
+        return;
+      }
+    } 
+    else if (codeType == SONY) {
+      Serial.print("Received SONY: ");
+    } 
+    else if (codeType == RC5) {
+      Serial.print("Received RC5: ");
+    } 
+    else if (codeType == RC6) {
+      Serial.print("Received RC6: ");
+    } 
+    else {
+      Serial.print("Unexpected codeType ");
+      Serial.print(codeType, DEC);
+      Serial.println("");
+    }
+    Serial.println(results->value, HEX);
+    codeValue = results->value;
+    codeLen = results->bits;
+    // Send data to server
+    sprintf(buf, "GET /ajax/events/?device=%s&value=%i_%lu", "ir",codeType,(int)codeValue);   
+    sentValueToServer();    
+  }
+}
 

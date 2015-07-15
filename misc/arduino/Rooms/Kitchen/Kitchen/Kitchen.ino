@@ -11,8 +11,8 @@
 #include <Ethernet.h>
 
 // Ethernet Configuration
-byte mac[] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x25 };
-IPAddress ip(192,168,1,25);
+byte mac[] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x16 };
+IPAddress ip(192,168,1,16);
 EthernetServer server(80);
 EthernetClient client;
 
@@ -49,7 +49,7 @@ byte LED2GREENVALUE = 0;
 byte LED2BLUEVALUE = 0;
 byte LED2SMOOTH = 0;
 
-
+char buf[80];
 
 #define LED2REDPIN 9
 #define LED2GREENPIN 10
@@ -91,6 +91,7 @@ unsigned long codeValue; // The code value if not raw
 unsigned int rawCodes[RAWBUF]; // The durations if raw
 int codeLen; // The length of the code
 int toggle = 0; // The RC5/6 toggle state
+char ipbuff[16];
 
 
 
@@ -216,10 +217,16 @@ void act(){
     return;
   } 
   
-  client.println("Kitchen Arduino");    
-  client.println("Version 1.1");    
-
-  
+  client.println("Kitchen Arduino");
+  client.println("Version 1.2");
+  client.print("MOTION = ");
+  client.println(MOTIONVALUE);
+  client.print("LIGHT = ");
+  client.println(LIGHTVALUE);
+  client.print("IR = ");
+  client.print(codeType);
+  client.print("_");
+  client.println(codeValue);
 }
 
 
@@ -238,12 +245,21 @@ void loop(void) {
   byte motion_value = digitalRead(MOTIONPIN);
   if (motion_value == 1){
     MOTIONTIME = MOTIONDELAY;
-    MOTIONVALUE = 1;
- 
+    if (MOTIONVALUE == 0){
+      sprintf(buf, "GET /ajax/events/?device=%s&value=%i", "motion", 1);   
+      sentValueToServer();
+    }
+    MOTIONVALUE = 1; 
+       
+    
   } else {
     if (MOTIONTIME>0){
       MOTIONTIME --;
       if (MOTIONTIME <=0){
+         if (MOTIONVALUE == 1){
+          sprintf(buf, "GET /ajax/events/?device=%s&value=%i", "motion", 0);   
+          sentValueToServer();
+        }
         MOTIONVALUE = 0;
       }
     }
@@ -252,15 +268,21 @@ void loop(void) {
   LIGHTTIME++;
    
   if (LIGHTTIME >= LIGHTDELAY) {
-   LIGHTTIME = 0;
-   LIGHTVALUE = analogRead(LIGHTPIN);
+     LIGHTTIME = 0;
+     
+     int TEMPVALUE = analogRead(LIGHTPIN);
+     if (abs(TEMPVALUE - LIGHTVALUE)>30) {      
+        sprintf(buf, "GET /ajax/events/?device=%s&value=%i", "light",(int)LIGHTVALUE);   
+        sentValueToServer();
+        LIGHTVALUE = TEMPVALUE;
+     }
    }
   
   
   // ИК приемник
   if (irrecv.decode(&results)) // Если данные пришли 
   {
-    Serial.println(results.value, HEX); // Отправляем полученную данную в консоль
+    
     for (int i=0; i<9; i++){
       IRCOMMANDS[i] = IRCOMMANDS[i+1];
     }    
@@ -347,24 +369,22 @@ void loop(void) {
   }
 }
 
-void sentValueToServer(char *device, char *value){
+void sentValueToServer(){
 
-    client_get.stop();
-Serial.println("connecting...");
-int ret = client_get.connect(SERVER, 80);
-Serial.println(ret);
-if (ret) {
+    client_get.stop();    
+    Serial.println("connecting...");
+    int ret = client_get.connect(SERVER, 80);    
+  if (ret) {
     Serial.println("connected");
     // Make a HTTP request:
-    client_get.print("GET /ajax/events?test=2");
-   // client_get.print(device);
-  //  client_get.print("&value=");
-  //  client_get.print(value);
-    client_get.println(" HTTP/1.1");
-  //  client.print("Host: ");
-    
-    client_get.println("Connection: close");
-    client_get.println();
+   client_get.print(buf);
+   client_get.println(" HTTP/1.0");
+   client_get.println("Host: 192.168.1.4");
+   client_get.println(ipbuff); // ip адрес нашего контроллера в текстовом виде
+   client_get.print("Content-Type: text/html\n");
+   client_get.println("Connection: close\n");
+   delay(500);
+   client_get.stop();
   }
   else {
     // kf you didn't get a connection to the server:
@@ -373,7 +393,6 @@ if (ret) {
     Serial.println(ret);
     Serial.println(client_get.status());
   }
-  client_get.stop();
 }
 
 
@@ -476,11 +495,8 @@ void storeCode(decode_results *results) {
     codeValue = results->value;
     codeLen = results->bits;
     // Send data to server
-    //char* buf;
-    //sprintf(buf, "%lu", codeValue);
-  
-    sentValueToServer("ir", "buf");
-    
+    sprintf(buf, "GET /ajax/events/?device=%s&value=%i_%lu", "ir",codeType,(int)codeValue);   
+    sentValueToServer();    
   }
 }
 
