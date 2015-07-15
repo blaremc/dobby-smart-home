@@ -71,17 +71,17 @@ class Scenario_Bedroom extends Dobby_Scenario {
 
     protected function recieveIR() {
         $value = $this->device('BedroomIR')->last_value;
-        if (in_array($value, '1_3137863935')) {
+        if ($value == '1_3137863935') {
             $this->toggleMainLight();
         }
-        if (in_array($value, '1_3137880255')) {
+        if ($value == '1_3137896575') {
             $this->toggleMainLight();
         }
-        if (in_array($value, '1_3137896575')) {
+        if ($value == '1_3137880255') {
             $this->setMainLight('0');
             $this->setWindowLight('0');
         }
-        if (in_array($value, '1_3137912895')) {
+        if ($value == '1_3137912895') {
             $this->setMainLight('1');
             $this->setWindowLight('1');
         }
