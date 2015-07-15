@@ -30,8 +30,11 @@ class Scenario_Sample extends Dobby_Scenario {
         'temperature' => array('type' => 'int', 'caption' => 'Температура воды'),
     );
 
+    public function status($params) {
 
-    protected function _execute($params) {
+    }
+
+    protected function _execute($params, $switcher) {
 
         if ($this->get('is_execute')) {
             return;

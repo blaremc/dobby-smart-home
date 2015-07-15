@@ -22,6 +22,10 @@ class Scenario_Bedroom extends Dobby_Scenario {
         'enable_window_light' => 0,
 
     );
+    public function cancel() {
+        $this->set('is_execute', false);
+
+    }
 
     public $fields = array(
         'name' => array('type' => array('setLight'), 'caption' => 'Операция'),
