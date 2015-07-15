@@ -6,7 +6,7 @@ class Scenario_Bedroom extends Dobby_Scenario {
     public $events = array(
         'BedroomMotion' => EventBus::DEVICE_CHANGE,
         'BedroomLight' => EventBus::DEVICE_CHANGE,
-        'BedroomIRReceiver' => EventBus::DEVICE_CHANGE,
+        'BedroomIR' => EventBus::DEVICE_CHANGE,
     );
 
     /**
@@ -40,10 +40,6 @@ class Scenario_Bedroom extends Dobby_Scenario {
         }
     }
 
-    public function cancel() {
-        $this->set('is_execute', false);
-    }
-
     /**
      * @param $event
      * @param $device
@@ -52,11 +48,11 @@ class Scenario_Bedroom extends Dobby_Scenario {
      */
     public function event($event, $device) {
 
-        if (!$this->get('is_execute')) {
-            return;
-        }
         switch ($device->name) {
+            case 'BedroomIR':
 
+                $this->recieveIR();
+                break;
 
         }
     }
@@ -68,6 +64,24 @@ class Scenario_Bedroom extends Dobby_Scenario {
             'enable_main_light' => $this->get('enable_main_light'),
             'enable_window_light' => $this->get('enable_window_light'),
         );
+    }
+
+    protected function recieveIR() {
+        $value = $this->device('BedroomIR')->last_value;
+        if (in_array($value, '1_3137863935')) {
+            $this->toggleMainLight();
+        }
+        if (in_array($value, '1_3137880255')) {
+            $this->toggleMainLight();
+        }
+        if (in_array($value, '1_3137896575')) {
+            $this->setMainLight('0');
+            $this->setWindowLight('0');
+        }
+        if (in_array($value, '1_3137912895')) {
+            $this->setMainLight('1');
+            $this->setWindowLight('1');
+        }
     }
 
 
@@ -99,28 +113,43 @@ class Scenario_Bedroom extends Dobby_Scenario {
             $this->set('border_color', $params['border_color']);
         }
         if ($params['enable_main_light'] != -1) {
+
             if ($switcher == '1') {
-                $value = $this->get('enable_main_light');
-                $value = $value == '1' ? '0' : '1';
-                $this->device('BedroomLights')->setValue('1:' . $value);
-                $this->set('enable_main_light', $value);
+               $this->toggleMainLight();
             } else {
-                $this->device('BedroomLights')->setValue('1:' . $params['enable_main_light']);
-                $this->set('enable_main_light', $params['enable_main_light']);
+                $this->setMainLight($params['enable_main_light']);
             }
         }
         if ($params['enable_window_light'] != -1) {
-
             if ($switcher == '1') {
-                $value = $this->get('enable_window_light');
-                $value = $value == '1' ? '0' : '1';
-                $this->device('BedroomLights')->setValue('2:' . $value);
-                $this->set('enable_window_light', $value);
+                $this->toggleMainLight();
             } else {
-                $this->device('BedroomLights')->setValue('2:' . $params['enable_window_light']);
-                $this->set('enable_window_light', $params['enable_window_light']);
+                $this->setWindowLight($params['enable_window_light']);
             }
         }
+    }
+
+    protected function toggleMainLight(){
+        $value = $this->get('enable_window_light');
+        $value = $value == '1' ? '0' : '1';
+        $this->setWindowLight($value);
+    }
+
+    protected function setWindowLight($enable) {
+        $this->device('BedroomLights')->setValue('2:' . $enable);
+        $this->set('enable_window_light', $enable);
+    }
+
+
+    protected function toggleMainLight(){
+        $value = $this->get('enable_main_light');
+        $value = $value == '1' ? '0' : '1';
+        $this->setMainLight($value);
+    }
+
+    protected function setMainLight($enable) {
+        $this->device('BedroomLights')->setValue('1:' . $enable);
+        $this->set('enable_main_light', $enable);
     }
 
 }
