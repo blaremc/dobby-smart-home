@@ -2,3 +2,4 @@ htdocs/cache/*
 htdocs/logs/*
 *.idea
 htdocs/application/config/*
+phpMyAdmin
