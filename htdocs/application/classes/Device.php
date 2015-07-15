@@ -126,7 +126,13 @@ class Device {
         $this->last_value = $value;
         $this->execute_date = date('Y-m-d H:i:s');
         $this->saveValue();
-        $this->_save();
+        Database::instance()->prepare('UPDATE devices SET last_value=:value,
+                                            last_date=NOW(), execute_date = :execute_date
+                                           WHERE id_devices=:id')
+            ->bindValue(':id', $this->id_devices)
+            ->bindValue(':value', $this->last_value)
+            ->bindValue(':execute_date', $this->execute_date)
+            ->execute();
     }
 
     /**
