@@ -267,7 +267,7 @@ class Device {
      * @throws Kohana_Exception
      */
     public static function getDeviceByAddress($address) {
-        return Database::instance()->prepare('SELECT * FROM device WHERE address=:address')
+        return Database::instance()->prepare('SELECT * FROM devices WHERE address=:address')
             ->bindValue(':address', $address)
             ->execute()
             ->fetch();
