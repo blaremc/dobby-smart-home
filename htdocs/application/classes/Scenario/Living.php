@@ -36,7 +36,7 @@ class Scenario_Living extends Dobby_Scenario {
     );
 
     protected $delays = array(
-        'kitchen_window_light' => 150, // Максимальная задержка при входе на кухню в секундах
+        'kitchen_window_light' => 120, // Максимальная задержка при входе на кухню в секундах
         'kitchen_window_light_min' => 10 // Задержка подсветки кухни при входе в гостинную
     );
 
@@ -156,7 +156,7 @@ class Scenario_Living extends Dobby_Scenario {
         $this->set('enable_window_light', '0');
         $this->set('kitchen_window_light_timer', '0');
         $this->set('kitchen_window_light_times', '0');
-        $this->device('LivingLeds1')->setValue('1:0:0:0');
+        $this->device('LivingLeds1')->setValue('1:0:0:0:50');
     }
 
     protected function checkKitchenMotion() {
@@ -167,7 +167,7 @@ class Scenario_Living extends Dobby_Scenario {
                 if ($this->device('KitchenLight')->last_value < 400) {
 
                     Dobby::$log->add('Detected move in kitchen, enable light');
-                    $this->device('LivingLeds1')->setValue('1:255:0:0');
+                    $this->device('LivingLeds1')->setValue('1:0:0:255:50');
                     $this->set('enable_window_light', '1');
                     $this->set('kitchen_window_light_times', '0');
                     $this->set('kitchen_window_light_timer', '0');
@@ -185,7 +185,7 @@ class Scenario_Living extends Dobby_Scenario {
             if ($this->device('KitchenLight')->last_value < 100) {
                 if ($this->device('LivingMotion')->last_value == '1' && $this->device('KitchenMotion')->last_value != '1') {
                     Dobby::$log->add('Detected move in living room, enable light in Kitchen');
-                    $this->device('LivingLeds1')->setValue('1:255:0:0');
+                    $this->device('LivingLeds1')->setValue('1:0:0:100:50');
                     $this->set('enable_window_light', '1');
                     $this->set('kitchen_window_light_times',  time() + $this->delays['kitchen_window_light_min']);
                     $this->set('kitchen_window_light_timer', '1');
