@@ -7,7 +7,7 @@ class Scenario_Living extends Dobby_Scenario {
         'LivingMotion' => EventBus::DEVICE_CHANGE,
         'LivingLight' => EventBus::DEVICE_CHANGE,
         'LivingIRReceiver' => EventBus::DEVICE_CHANGE,
-        'KitchenMotion' => Array(EventBus::DEVICE_CHANGE, EventBus::DEVICE_UPDATE),
+        'KitchenMotion' => Array(EventBus::DEVICE_CHANGE, EventBus::TIME),
         'KitchenLight' => EventBus::DEVICE_CHANGE,
     );
 
@@ -64,12 +64,12 @@ class Scenario_Living extends Dobby_Scenario {
         switch ($device->name) {
 
             case 'LivingMotion':
-                Minion_CLI::write('LivingMotion');
+
                 $this->checkLivingMotion();
                 break;
             case 'KitchenMotion':
-                Minion_CLI::write('KitchenMotion', print_r($event, true));
                 if ($event == EventBus::DEVICE_CHANGE) {
+                    Minion_CLI::write('KitchenMotion');
                     $this->checkKitchenMotion();
                 } else {
                     $this->checkOff();
@@ -131,8 +131,8 @@ class Scenario_Living extends Dobby_Scenario {
 
             if ($switcher == '1') {
                 $value = $this->get('enable_window_light');
-                $value = $value == '1' ? '0' : '1';
-                $this->device('KitchenLights')->setValue('1:' . $value);
+                $value = $value == '1' ? '0' : '255';
+                $this->device('LivingLeds1')->setValue('1:' . $value.':0:0');
                 $this->set('enable_window_light', $value);
                 if ($value == '1') {
                     $this->set('enable_window_light_user', '1');
@@ -140,7 +140,7 @@ class Scenario_Living extends Dobby_Scenario {
                     $this->turnKitchenWindowLightOff();
                 }
             } else {
-                $this->device('KitchenLights')->setValue('1:' . $params['enable_window_light']);
+                $this->device('LivingLeds1')->setValue('1:' . $params['enable_window_light'].':0:0');
                 $this->set('enable_window_light', $params['enable_window_light']);
                 if ($params['enable_window_light'] == '1') {
                     $this->set('enable_window_light_user', '1');
@@ -156,7 +156,7 @@ class Scenario_Living extends Dobby_Scenario {
         $this->set('enable_window_light', '0');
         $this->set('kitchen_window_light_timer', '0');
         $this->set('kitchen_window_light_times', '0');
-        $this->device('KitchenLights')->setValue('1:0');
+        $this->device('LivingLeds1')->setValue('1:255:0:0');
     }
 
     protected function checkKitchenMotion() {
@@ -167,7 +167,7 @@ class Scenario_Living extends Dobby_Scenario {
                 if ($this->device('KitchenLight')->last_value < 400) {
 
                     Dobby::$log->add('Detected move in kitchen, enable light');
-                    $this->device('KitchenLights')->setValue('1:1');
+                    $this->device('LivingLeds1')->setValue('1:255:0:0');
                     $this->set('enable_window_light', '1');
                     $this->set('kitchen_window_light_times', '0');
                     $this->set('kitchen_window_light_timer', '0');
@@ -185,7 +185,7 @@ class Scenario_Living extends Dobby_Scenario {
             if ($this->device('KitchenLight')->last_value < 100) {
                 if ($this->device('LivingMotion')->last_value == '1' && $this->device('KitchenMotion')->last_value != '1') {
                     Dobby::$log->add('Detected move in living room, enable light in Kitchen');
-                    $this->device('KitchenLights')->setValue('1:1');
+                    $this->device('LivingLeds1')->setValue('1:255:0:0');
                     $this->set('enable_window_light', '1');
                     $this->set('kitchen_window_light_times',  time() + $this->delays['kitchen_window_light_min']);
                     $this->set('kitchen_window_light_timer', '1');
