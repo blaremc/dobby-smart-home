@@ -155,7 +155,7 @@
                 items = $.parseJSON(items);
                 if (items) {
                     for (var i = 0; i < items.length; i++) {
-                        if (items[i].id_logs > logId) {
+                        if (parseInt(items[i].id_logs )> parseInt(logId)) {
                             logId = items[i].id_logs;
 
                             $log.prepend('<div><span class="date">[' + items[i].date + ']</span><span class="message">' + items[i].message + '</span></div>')
