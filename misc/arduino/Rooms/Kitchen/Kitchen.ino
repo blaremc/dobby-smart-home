@@ -49,7 +49,7 @@ byte LED2GREENVALUE = 0;
 byte LED2BLUEVALUE = 0;
 byte LED2SMOOTH = 0;
 
-char buf[80];
+
 
 #define LED2REDPIN 9
 #define LED2GREENPIN 10
@@ -75,6 +75,8 @@ IRsend irsend;
 byte MOTIONVALUE = 0;
 int MOTIONTIME = 0;
 int MOTIONDELAY = 1000;
+int SENDTIME = 0;
+int SENDDELAY = 2000;
 
 int LIGHTVALUE = -1;
 int LIGHTTIME = 0;
@@ -93,7 +95,8 @@ int codeLen; // The length of the code
 int toggle = 0; // The RC5/6 toggle state
 char ipbuff[16];
 
-
+char buf[80];
+byte isclearbuf = 1;
 
 
 void setup(void) {
@@ -246,8 +249,8 @@ void loop(void) {
   if (motion_value == 1){
     MOTIONTIME = MOTIONDELAY;
     if (MOTIONVALUE == 0){
-      sprintf(buf, "GET /ajax/events/?device=%s&value=%i", "motion", 1);   
-      sentValueToServer();
+      sprintf(buf, "%sdevice[]=%s&value[]=%i&", buf, "motion",1);
+      isclearbuf = 0;
     }
     MOTIONVALUE = 1; 
        
@@ -257,8 +260,8 @@ void loop(void) {
       MOTIONTIME --;
       if (MOTIONTIME <=0){
          if (MOTIONVALUE == 1){
-          sprintf(buf, "GET /ajax/events/?device=%s&value=%i", "motion", 0);   
-          sentValueToServer();
+          sprintf(buf, "%sdevice[]=%s&value[]=%i&", buf, "motion",0);
+                 isclearbuf = 0;
         }
         MOTIONVALUE = 0;
       }
@@ -271,9 +274,9 @@ void loop(void) {
      LIGHTTIME = 0;
      
      int TEMPVALUE = analogRead(LIGHTPIN);
-     if (abs(TEMPVALUE - LIGHTVALUE)>30) {      
-        sprintf(buf, "GET /ajax/events/?device=%s&value=%i", "light",(int)LIGHTVALUE);   
-        sentValueToServer();
+     if (abs(TEMPVALUE - LIGHTVALUE)>20) {      
+        sprintf(buf, "%sdevice[]=%s&value[]=%i&", buf, "light",(int)LIGHTVALUE); 
+           isclearbuf = 0;   
         LIGHTVALUE = TEMPVALUE;
      }
    }
@@ -342,8 +345,8 @@ void loop(void) {
         char c = client.read();        
         if (c == '\n' && currentLineIsBlank) {
     
-           char* buf =getRequest(request);
-           strcpy(request,buf);
+           char* cbuf =getRequest(request);
+           strcpy(request,cbuf);
            sendHeaders(client);          
            parseRequest(request);          
            act();       
@@ -367,31 +370,44 @@ void loop(void) {
     delay(1);
     client.stop();
   }
+     LIGHTTIME++;
+   SENDTIME++;
+  if (SENDTIME >= SENDDELAY) {
+     SENDTIME = 0;
+    sendToServer();
+  
+  }
 }
 
-void sentValueToServer(){
 
-    client_get.stop();    
-    Serial.println("connecting...");
-    int ret = client_get.connect(SERVER, 80);    
-  if (ret) {
-    Serial.println("connected");
-    // Make a HTTP request:
-   client_get.print(buf);
-   client_get.println(" HTTP/1.0");
-   client_get.println("Host: 192.168.1.4");
-   client_get.println(ipbuff); // ip адрес нашего контроллера в текстовом виде
-   client_get.print("Content-Type: text/html\n");
-   client_get.println("Connection: close\n");
-   delay(2000);
-   client_get.stop();
+void sendToServer() {
+  
+  if (!isclearbuf){
+     
+      Serial.println("connecting...");
+      int res = client_get.connect(SERVER, 80);
+      if (res){
+      Serial.println("connected");
+    
+    
+    
+      Serial.print("GET /ajax/events/?");
+      Serial.println(buf);
+      // Make a HTTP request:
+     client_get.print("GET /ajax/events/?");    
+     client_get.println(buf);
+     client_get.println(" HTTP/1.1");
+     client_get.println("Host: 192.168.1.4");
+     client_get.println("Connection: close\n");
+     client_get.println("User-Agent: arduino-ethernet");
+     client_get.println("Content-Type: text/html\n");
+     delay(500);
+     client_get.stop();
+    
+     isclearbuf = 1;
+     sprintf(buf, "");   
+     Serial.println("sended");
   }
-  else {
-    // kf you didn't get a connection to the server:
-    Serial.println("connection failed");
-    Serial.print("Error: ");
-    Serial.println(ret);
-    Serial.println(client_get.status());
   }
 }
 
@@ -495,8 +511,8 @@ void storeCode(decode_results *results) {
     codeValue = results->value;
     codeLen = results->bits;
     // Send data to server
-    sprintf(buf, "GET /ajax/events/?device=%s&value=%i_%lu", "ir",codeType,(int)codeValue);   
-    sentValueToServer();    
+    sprintf(buf, "%sdevice[]=%s&value[]=%i_%lu&", buf, "ir",codeType,(int)codeValue);   
+    isclearbuf = 0; 
   }
 }
 
