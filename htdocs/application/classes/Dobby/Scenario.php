@@ -79,6 +79,9 @@ abstract class Dobby_Scenario {
     protected function set($name, $value) {
         $this->_scenario->setData($name, $value);
     }
+    protected function saveData() {
+        $this->_scenario->saveData();
+    }
 
     protected function get($name) {
         return $this->_scenario->getData($name);

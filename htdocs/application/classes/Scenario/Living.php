@@ -36,7 +36,7 @@ class Scenario_Living extends Dobby_Scenario {
     );
 
     protected $delays = array(
-        'kitchen_window_light' => 80, // Максимальная задержка при входе на кухню в секундах
+        'kitchen_window_light' => 60, // Максимальная задержка при входе на кухню в секундах
         'kitchen_window_light_min' => 10 // Задержка подсветки кухни при входе в гостинную
     );
 
@@ -149,6 +149,7 @@ class Scenario_Living extends Dobby_Scenario {
                 }
             }
         }
+        $this->saveData();
     }
 
     protected function turnKitchenWindowLightOff() {
@@ -156,6 +157,7 @@ class Scenario_Living extends Dobby_Scenario {
         $this->set('enable_window_light', '0');
         $this->set('kitchen_window_light_timer', '0');
         $this->set('kitchen_window_light_times', '0');
+        $this->saveData();
         $this->device('LivingLeds1')->setValue('1:0:0:0:1000');
     }
 
@@ -172,11 +174,13 @@ class Scenario_Living extends Dobby_Scenario {
                     $this->set('enable_window_light', '1');
                     $this->set('kitchen_window_light_times', '0');
                     $this->set('kitchen_window_light_timer', '0');
+                    $this->saveData();
                 }
             } else {
                 Dobby::$log->add('No moving in kitchen, enable timer off');
                 $this->set('kitchen_window_light_times', time() + $this->delays['kitchen_window_light']);
                 $this->set('kitchen_window_light_timer', '1');
+                $this->saveData();
                 Dobby::$log->add('Time for light off '.date('H:i:s',$this->get('kitchen_window_light_times')));
             }
         }
@@ -191,6 +195,7 @@ class Scenario_Living extends Dobby_Scenario {
                     $this->set('enable_window_light', '1');
                     $this->set('kitchen_window_light_times',  time() + $this->delays['kitchen_window_light_min']);
                     $this->set('kitchen_window_light_timer', '1');
+                    $this->saveData();
                 }
             }
         }
@@ -210,6 +215,7 @@ class Scenario_Living extends Dobby_Scenario {
                 Dobby::$log->add('Clear timer');
                 $this->set('kitchen_window_light_times', '0');
                 $this->set('kitchen_window_light_timer', '0');
+                $this->saveData();
             }
         }
     }

@@ -13,6 +13,7 @@ class Scenario {
     public $error = null;
     public $data = array();
     public $name = null;
+    public $setingData = array();
 
     protected static $_devices = array();
 
@@ -130,8 +131,24 @@ class Scenario {
      * @param $value
      */
     public function setData($name, $value) {
-        $this->data[$name] = $value;
-        $this->_save();
+        $this->setingData[$name] = $value;
+    }
+
+    /**
+     * @return Kohana_Database_Prepare
+     * @throws Kohana_Exception
+     */
+    public function saveData() {
+        $this->reloadData();
+        $this->data = array_merge($this->data, $this->setingData);
+
+        if ($this->id_scenarios) {
+            return Database::instance()->prepare('UPDATE scenarios SET data=:data WHERE id_scenarios=:id')
+                ->bindValue(':data', json_encode($this->data))
+                ->bindValue(':id', $this->id_scenarios)
+                ->execute();
+        }
+        $this->setingData = array();
     }
 
     /**
@@ -154,10 +171,10 @@ class Scenario {
 
     public function reloadData(){
         $data = Database::instance()
-            ->prepare('SELECT data FROM scenarios WHERE id_scenarios == :id')
+            ->prepare('SELECT data FROM scenarios WHERE id_scenarios = :id')
             ->bindValue(':id', $this->id_scenarios)
             ->execute()
-            ->fetchAll();
+            ->fetch();
         $this->data = isset($data['data']) ? json_decode($data['data'], true) : array();
     }
 
