@@ -24,7 +24,7 @@ class Dobby_Log {
     public function getList($logId) {
 
         if ($logId == 0) {
-            $items = Database::instance()->prepare('SELECT * FROM logs WHERE create_date > NOW( ) - INTERVAL 12 HOUR  ORDER BY id_logs')
+            $items = Database::instance()->prepare('SELECT * FROM logs WHERE create_date > NOW( ) - INTERVAL 2 HOUR  ORDER BY id_logs')
                 ->bindValue(':logid', $logId, PDO::PARAM_INT)
                 ->execute()
                 ->fetchAll();
