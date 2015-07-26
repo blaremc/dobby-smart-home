@@ -156,7 +156,7 @@ class Scenario_Living extends Dobby_Scenario {
         $this->set('enable_window_light', '0');
         $this->set('kitchen_window_light_timer', '0');
         $this->set('kitchen_window_light_times', '0');
-        $this->device('LivingLeds1')->setValue('1:0:0:0:3000');
+        $this->device('LivingLeds1')->setValue('1:0:0:0:1000');
     }
 
     protected function checkKitchenMotion() {
