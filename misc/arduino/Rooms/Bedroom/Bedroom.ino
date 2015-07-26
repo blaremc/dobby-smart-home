@@ -75,7 +75,7 @@ byte MOTIONVALUE = 0;
 int MOTIONTIME = 0;
 int MOTIONDELAY = 5000;
 int SENDTIME = 0;
-int SENDDELAY = 300;
+int SENDDELAY = 1000;
 
 int LIGHTVALUE = -1;
 int LIGHTTIME = 0;
@@ -116,6 +116,13 @@ void setup(void) {
   pinMode(RELE2PIN, OUTPUT);
   digitalWrite(RELE1PIN, LOW); 
   digitalWrite(RELE2PIN, LOW);
+
+  int res = client_get.connect(SERVER, 80);
+  if (res){
+    Serial.println("Success connection");
+  } else {
+    Serial.println("Fail connection");  
+  }
  
 }
 
@@ -385,32 +392,37 @@ void loop(void) {
 
 void sendToServer() {
   
-  if (!isclearbuf){
-     
-      Serial.println("connecting...");
-      int res = client_get.connect(SERVER, 80);
-      if (res){
-      Serial.println("connected");
-    
-    
-    
-      Serial.print("GET /ajax/events/?");
-      Serial.println(buf);
+  if (!isclearbuf){    
+      int res = 1;
+      if (!client_get.connected()){
+        client_get.stop();
+        Serial.println("Reconecting...");
+        res = client_get.connect(SERVER, 80);
+        if (res){
+          Serial.println("Success connection");
+        } else {
+          Serial.println("Fail connection");  
+        }
+      }
+    if (res){
+     Serial.print("GET /ajax/events/?");
+     Serial.println(buf);
       // Make a HTTP request:
      client_get.print("GET /ajax/events/?");    
-     client_get.println(buf);
+     client_get.print(buf);
      client_get.println(" HTTP/1.1");
      client_get.println("Host: 192.168.1.4");
-     client_get.println("Connection: close\n");
+     client_get.println("Connection: keep-alive");
+     client_get.println("Keep-Alive: timeout=30, max=100");
      client_get.println("User-Agent: arduino-ethernet");
      client_get.println("Content-Type: text/html\n");
      delay(500);
-     client_get.stop();
+     //client_get.stop();
     
      isclearbuf = 1;
      sprintf(buf, "");   
      Serial.println("sended");
-  }
+    }
   }
 }
 
