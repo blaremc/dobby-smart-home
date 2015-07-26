@@ -95,7 +95,7 @@ class Scenario_Sample extends Dobby_Scenario {
      * @return mixed|void
      */
     public function event($event, $device) {
-
+        $this->updateData();
         if (!$this->get('is_execute')) {
             return;
         }

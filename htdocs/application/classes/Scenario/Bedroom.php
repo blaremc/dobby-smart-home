@@ -51,7 +51,7 @@ class Scenario_Bedroom extends Dobby_Scenario {
      * @return mixed|void
      */
     public function event($event, $device) {
-
+        $this->updateData();
         switch ($device->name) {
             case 'BedroomIR':
                 $this->recieveIR();

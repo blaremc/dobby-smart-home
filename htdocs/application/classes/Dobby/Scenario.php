@@ -83,4 +83,8 @@ abstract class Dobby_Scenario {
     protected function get($name) {
         return $this->_scenario->getData($name);
     }
+
+    public function updateData(){
+        $this->_scenario->reloadData();
+    }
 }

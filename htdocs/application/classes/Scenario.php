@@ -152,6 +152,15 @@ class Scenario {
         $this->_save();
     }
 
+    public function reloadData(){
+        $data = Database::instance()
+            ->prepare('SELECT data FROM scenarios WHERE id_scenarios == :id')
+            ->bindValue(':id', $this->id_scenarios)
+            ->execute()
+            ->fetchAll();
+        $this->data = isset($data['data']) ? json_decode($data['data'], true) : array();
+    }
+
     /**
      * @param $name
      *

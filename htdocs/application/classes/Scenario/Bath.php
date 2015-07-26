@@ -116,7 +116,7 @@ class Scenario_Bath extends Dobby_Scenario {
      * @return mixed|void
      */
     public function event($event, $device) {
-
+        $this->updateData();
         if ($event == EventBus::TIME) {
             $this->update();
             return;
