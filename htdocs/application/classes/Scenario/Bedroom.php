@@ -130,6 +130,7 @@ class Scenario_Bedroom extends Dobby_Scenario {
                 $this->setWindowLight($params['enable_window_light']);
             }
         }
+        $this->saveData();
     }
 
     protected function toggleWindowLight(){

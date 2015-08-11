@@ -36,7 +36,7 @@ class Scenario_Living extends Dobby_Scenario {
     );
 
     protected $delays = array(
-        'kitchen_window_light' => 60, // Максимальная задержка при входе на кухню в секундах
+        'kitchen_window_light' => 120, // Максимальная задержка при входе на кухню в секундах
         'kitchen_window_light_min' => 10 // Задержка подсветки кухни при входе в гостинную
     );
 
@@ -158,7 +158,7 @@ class Scenario_Living extends Dobby_Scenario {
         $this->set('kitchen_window_light_timer', '0');
         $this->set('kitchen_window_light_times', '0');
         $this->saveData();
-        $this->device('LivingLeds1')->setValue('1:0:0:0:1000');
+        $this->device('LivingLeds1')->setValue('1:0:0:0:5000');
     }
 
     protected function checkKitchenMotion() {
@@ -168,7 +168,7 @@ class Scenario_Living extends Dobby_Scenario {
             if ($this->device('KitchenMotion')->last_value == '1') {
                 Dobby::$log->add('Detected move in kitchen light '.$this->device('KitchenLight')->last_value);
 
-                if ($this->device('KitchenLight')->last_value < 550) {
+                if ($this->device('KitchenLight')->last_value < 400) {
                     Dobby::$log->add('Turn on light');
                     $this->device('LivingLeds1')->setValue('1:0:0:255:30');
                     $this->set('enable_window_light', '1');
@@ -191,7 +191,7 @@ class Scenario_Living extends Dobby_Scenario {
             if ($this->device('KitchenLight')->last_value < 100) {
                 if ($this->device('LivingMotion')->last_value == '1' && $this->device('KitchenMotion')->last_value != '1') {
                     Dobby::$log->add('Detected move in living room, turn on light in Kitchen');
-                    $this->device('LivingLeds1')->setValue('1:0:0:100:150');
+                    $this->device('LivingLeds1')->setValue('1:0:0:100:50');
                     $this->set('enable_window_light', '1');
                     $this->set('kitchen_window_light_times',  time() + $this->delays['kitchen_window_light_min']);
                     $this->set('kitchen_window_light_timer', '1');
@@ -205,14 +205,13 @@ class Scenario_Living extends Dobby_Scenario {
 
         if ($this->get('enable_window_light_user') != '1') {
             if ($this->get('enable_window_light') == '1' && $this->get('kitchen_window_light_timer') == '1') {
-                Dobby::$log->add('Time off '.date('H:i:s',$this->get('kitchen_window_light_times')).' Current '.date('H:i:s',time()));
+                //Dobby::$log->add('Time off '.date('H:i:s',$this->get('kitchen_window_light_times')).' Current '.date('H:i:s',time()));
                 if ($this->get('kitchen_window_light_times') <= time()) {
                     Dobby::$log->add('Turn off light in Kitchen');
                     $this->turnKitchenWindowLightOff();
                 }
             }
             if ($this->device('KitchenMotion')->last_value == '1') {
-                Dobby::$log->add('Clear timer');
                 $this->set('kitchen_window_light_times', '0');
                 $this->set('kitchen_window_light_timer', '0');
                 $this->saveData();

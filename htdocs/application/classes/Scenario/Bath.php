@@ -148,35 +148,43 @@ class Scenario_Bath extends Dobby_Scenario {
 
     protected function execCloseFaucets() {
         $this->set('is_execute', true);
+        $this->saveData();
         Dobby::$log->add('Closing faucets...');
         $this->closeFaucets(self::TIMEOUT_FAUCET);
         Dobby::$log->add('Faucets is close');
         $this->set('is_execute', false);
+        $this->saveData();
     }
 
     protected function execOpenFaucets() {
         $this->set('is_execute', true);
+        $this->saveData();
         Dobby::$log->add('Opening faucets...');
         $this->openFaucets(self::TIMEOUT_FAUCET);
         Dobby::$log->add('Faucets is open');
         $this->set('is_execute', false);
+        $this->saveData();
     }
 
 
     protected function execOpenSinc() {
         $this->set('is_execute', true);
+        $this->saveData();
         Dobby::$log->add('Opening sink...');
         $this->openSink();
         Dobby::$log->add('Sing is open');
         $this->set('is_execute', false);
+        $this->saveData();
     }
 
     protected function execCloseSinc() {
         $this->set('is_execute', true);
+        $this->saveData();
         Dobby::$log->add('Closing sink...');
         $this->closeSink();
         Dobby::$log->add('Sing is close');
         $this->set('is_execute', false);
+        $this->saveData();
     }
 
 
@@ -190,6 +198,7 @@ class Scenario_Bath extends Dobby_Scenario {
         $this->set('filling', true);
         $this->set('open_hot', 0);
         $this->set('open_cold', 0);
+        $this->saveData();
         $this->closeSink();
         $this->openFaucets(self::TIMEOUT_FAUCET);
         $this->temperatureChange();
@@ -200,6 +209,7 @@ class Scenario_Bath extends Dobby_Scenario {
         if (!$this->get('is_execute')) {
             $this->set('is_execute', true);
             $this->set('pulling', true);
+            $this->saveData();
             $this->openSink();
         }
     }
@@ -239,6 +249,7 @@ class Scenario_Bath extends Dobby_Scenario {
         $this->set('is_execute', false);
         $this->set('is_fill', true);
         $this->set('filling', false);
+        $this->saveData();
         $this->closeFaucets(self::OPEN_FAUCET_TIME);
         EventBus::instance()->trigger(EventBus::SCENARIO_COMPLETE, $this->_scenario);
     }
@@ -248,6 +259,7 @@ class Scenario_Bath extends Dobby_Scenario {
         $this->set('is_execute', false);
         $this->set('pulling', false);
         $this->set('is_fill', false);
+        $this->saveData();
     }
 
     /**
@@ -298,6 +310,7 @@ class Scenario_Bath extends Dobby_Scenario {
         foreach ($names as $name) {
             $this->set('open_hot', $this->get('open_hot') + $seconds);
             $this->set('open_cold', $this->get('open_hot') + $seconds);
+            $this->saveData();
             $this->device($name)->setValue(1);
         }
         sleep($seconds);
@@ -316,12 +329,14 @@ class Scenario_Bath extends Dobby_Scenario {
     protected function setEmptyBath() {
         Dobby::$log->add('Set empty bath');
         $this->set('empty_distance', $this->device('BathDistance')->last_value);
+        $this->saveData();
     }
 
 
     protected function setFullBath() {
         Dobby::$log->add('Set full bath');
         $this->set('full_distance', $this->device('BathDistance')->last_value);
+        $this->saveData();
     }
 
     protected function temperatureChange() {
@@ -366,12 +381,14 @@ class Scenario_Bath extends Dobby_Scenario {
                 $vals = implode(':', $matches);
                 $this->device('BedroomLeds')->setValue('1:' . $vals);
                 $this->set('center_color', $value);
+                $this->saveData();
             } else {
                 preg_match_all('/([\d]+)/', $params['center_color'], $matches);
                 $matches = $matches[0];
                 $value = implode(':', $matches);
                 $this->device('BedroomLeds')->setValue('1:' . $value);
                 $this->set('center_color', $params['center_color']);
+                $this->saveData();
             }
         }
 
@@ -381,9 +398,11 @@ class Scenario_Bath extends Dobby_Scenario {
                 $value = $value == '1' ? '0' : '1';
                 $this->device('BathroomRele')->setValue('1:' . $value);
                 $this->set('enable_main_light', $value);
+                $this->saveData();
             } else {
                 $this->device('BathroomRele')->setValue('1:' . $params['enable_main_light']);
                 $this->set('enable_main_light', $params['enable_main_light']);
+                $this->saveData();
             }
         }
 
@@ -398,6 +417,7 @@ class Scenario_Bath extends Dobby_Scenario {
             $this->set('fan_enable', null);
             $this->device('BathroomRele')->setValue('2:0');
             $this->set('fan_stoptime', null);
+            $this->saveData();
         } else {
             $this->set('fan_enable', '1');
             Dobby::$log->add('FAN ON');
@@ -406,6 +426,7 @@ class Scenario_Bath extends Dobby_Scenario {
                 $this->set('fan_stoptime', time() + $fan_time * 60);
                 Dobby::$log->add('FAN SET STOP TIME ' . date('d.m.Y H:i:s', $this->get('fan_stoptime')));
             }
+            $this->saveData();
         }
     }
 
@@ -416,6 +437,7 @@ class Scenario_Bath extends Dobby_Scenario {
                 if ((int)$this->get('fan_stoptime') < time()) {
                     $this->device('BathroomRele')->setValue('2:0');
                     $this->set('fan_stoptime', null);
+                    $this->saveData();
                     Dobby::$log->add('FAN OFF2');
                 }
             }
