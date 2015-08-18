@@ -10,3 +10,6 @@ D:\!Development\SmartHome\MultiRoom\MultiRoom\MultiRoom\bin\Debug\NAudio.Windows
 D:\!Development\SmartHome\MultiRoom\MultiRoom\MultiRoom\bin\Debug\NAudio.xml
 D:\!Development\SmartHome\MultiRoom\MultiRoom\MultiRoom\obj\Debug\MultiRoom.exe
 D:\!Development\SmartHome\MultiRoom\MultiRoom\MultiRoom\obj\Debug\MultiRoom.pdb
+C:\Development\Sites\dobby\misc\arduino\MultiRoom\MultiRoom\MultiRoom\bin\Debug\MultiRoom.exe.config
+C:\Development\Sites\dobby\misc\arduino\MultiRoom\MultiRoom\MultiRoom\obj\Debug\MultiRoom.exe
+C:\Development\Sites\dobby\misc\arduino\MultiRoom\MultiRoom\MultiRoom\obj\Debug\MultiRoom.pdb

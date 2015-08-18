@@ -19,3 +19,13 @@ E:\!Development\SmartHome\MultiRoom_Bass\MultiRoom_Bass\MultiRoom_Bass\obj\Debug
 E:\!Development\SmartHome\MultiRoom_Bass\MultiRoom_Bass\MultiRoom_Bass\obj\Debug\MultiRoom_Bass.Form1.resources
 E:\!Development\SmartHome\MultiRoom_Bass\MultiRoom_Bass\MultiRoom_Bass\obj\Debug\MultiRoom_Bass.Properties.Resources.resources
 E:\!Development\SmartHome\MultiRoom_Bass\MultiRoom_Bass\MultiRoom_Bass\obj\Debug\MultiRoom_Bass.csproj.GenerateResource.Cache
+C:\Development\Sites\dobby\misc\arduino\MultiRoom_Bass\MultiRoom_Bass\MultiRoom_Bass\bin\Debug\MultiRoom_Bass.exe.config
+C:\Development\Sites\dobby\misc\arduino\MultiRoom_Bass\MultiRoom_Bass\MultiRoom_Bass\obj\Debug\MultiRoom_Bass.exe
+C:\Development\Sites\dobby\misc\arduino\MultiRoom_Bass\MultiRoom_Bass\MultiRoom_Bass\obj\Debug\MultiRoom_Bass.pdb
+C:\Development\Sites\dobby\misc\arduino\MultiRoom_Bass\MultiRoom_Bass\MultiRoom_Bass\bin\Debug\MultiRoom_Bass.exe
+C:\Development\Sites\dobby\misc\arduino\MultiRoom_Bass\MultiRoom_Bass\MultiRoom_Bass\bin\Debug\MultiRoom_Bass.pdb
+C:\Development\Sites\dobby\misc\arduino\MultiRoom_Bass\MultiRoom_Bass\MultiRoom_Bass\bin\Debug\Bass.Net.xml
+C:\Development\Sites\dobby\misc\arduino\MultiRoom_Bass\MultiRoom_Bass\MultiRoom_Bass\obj\Debug\MultiRoom_Bass.csprojResolveAssemblyReference.cache
+C:\Development\Sites\dobby\misc\arduino\MultiRoom_Bass\MultiRoom_Bass\MultiRoom_Bass\obj\Debug\MultiRoom_Bass.Form1.resources
+C:\Development\Sites\dobby\misc\arduino\MultiRoom_Bass\MultiRoom_Bass\MultiRoom_Bass\obj\Debug\MultiRoom_Bass.Properties.Resources.resources
+C:\Development\Sites\dobby\misc\arduino\MultiRoom_Bass\MultiRoom_Bass\MultiRoom_Bass\obj\Debug\MultiRoom_Bass.csproj.GenerateResource.Cache

@@ -16,7 +16,7 @@ namespace MultiRoom_Bass
     public partial class Form1 : Form
     {
 
-        public static string file = @"E:\!Development\multiroom-bridge\Multiroom_Service\Multiroom_Service\bin\Debug\test.wav";
+        public static string file = @"C:\Development\Sites\dobby\misc\arduino\MultiRoom_Bass\MultiRoom_Bass\MultiRoom_Bass\bin\Debug\sound\test.wav";
         public Form1()
         {
             InitializeComponent();

@@ -1,0 +1,8 @@
+C:\Development\Sites\dobby\misc\applications\Multiroom\Multiroom\bin\Debug\Multiroom.exe.config
+C:\Development\Sites\dobby\misc\applications\Multiroom\Multiroom\bin\Debug\Multiroom.exe
+C:\Development\Sites\dobby\misc\applications\Multiroom\Multiroom\bin\Debug\Multiroom.pdb
+C:\Development\Sites\dobby\misc\applications\Multiroom\Multiroom\bin\Debug\Bass.Net.dll
+C:\Development\Sites\dobby\misc\applications\Multiroom\Multiroom\obj\Debug\Multiroom.exe
+C:\Development\Sites\dobby\misc\applications\Multiroom\Multiroom\obj\Debug\Multiroom.pdb
+C:\Development\Sites\dobby\misc\applications\Multiroom\Multiroom\obj\Debug\Multiroom.csprojResolveAssemblyReference.cache
+C:\Development\Sites\dobby\misc\applications\Multiroom\Multiroom\bin\Debug\Microsoft.MSXML.dll
