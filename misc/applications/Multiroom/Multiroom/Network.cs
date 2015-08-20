@@ -111,7 +111,7 @@ namespace Multiroom
             if (bytesRead > 0)
             {
                 // There  might be more data, so store the data received so far.
-                state.sb.Append(Encoding.ASCII.GetString(
+                state.sb.Append(Encoding.UTF8.GetString(
                     state.buffer, 0, bytesRead));
 
                 // Check for end-of-file tag. If it is not there, read 

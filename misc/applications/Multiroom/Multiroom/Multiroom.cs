@@ -4,53 +4,22 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Un4seen.Bass;
 using System.Web;
 using System.Configuration;
+using System.Speech.Synthesis;
+using System.Speech.AudioFormat;
 
 namespace Multiroom
 {
     class Multiroom
     {
 
-        public const int port = 6666;
-
-        const byte FRONT = 0;
-        const byte REAR = 1;
-        const byte CENTERBASS = 2;
-        const byte SIDE = 3;
-
-        static public Dictionary<int, BASSFlag> channels;
-
-        static public Dictionary<int, int> streams;
-
         private static Multiroom _instance;
 
         public Multiroom()
         {
 
-
-            Multiroom.addLog("Init bass");
-            if (!Bass.BASS_Init(-1, 44100, BASSInit.BASS_DEVICE_DEFAULT, IntPtr.Zero))
-            {
-                Multiroom.addLog("Bass init error " + Bass.BASS_ErrorGetCode());
-            }else
-            {
-                Multiroom.addLog("Bass started");
-            }
-
-            channels = new Dictionary<int, BASSFlag>();
-            channels.Add(-1, BASSFlag.BASS_DEFAULT | BASSFlag.BASS_SAMPLE_MONO);
-            channels.Add(FRONT, BASSFlag.BASS_SPEAKER_FRONT);
-            channels.Add(CENTERBASS, BASSFlag.BASS_SPEAKER_CENLFE);
-            channels.Add(REAR, BASSFlag.BASS_SPEAKER_REAR);
-            channels.Add(SIDE, BASSFlag.BASS_SPEAKER_REAR2);
-
-            streams = new Dictionary<int, int>();
-            streams.Add(FRONT, 0);
-            streams.Add(CENTERBASS, 0);
-            streams.Add(REAR, 0);
-            streams.Add(SIDE, 0);
+            Player.init();
 
             Database.instance().connect(ConfigurationSettings.AppSettings["mysql"]);
 
@@ -95,13 +64,15 @@ namespace Multiroom
                 switch (command)
                 {
                     case "test":
-                        return Test(Convert.ToInt32(HttpUtility.ParseQueryString(message).Get("channel")));
+                        return Test(HttpUtility.ParseQueryString(message).Get("channel"));
                     case "scan":
                         return Scan();
                     case "play":
                         return Play(HttpUtility.ParseQueryString(message).Get("id"), HttpUtility.ParseQueryString(message).Get("channels"));
                     case "stop":
                         return Stop( HttpUtility.ParseQueryString(message).Get("channels"));
+                    case "say":
+                        return Say(HttpUtility.ParseQueryString(message).Get("text"), HttpUtility.ParseQueryString(message).Get("channels"));
                 }
             }
             catch (Exception ex)
@@ -118,22 +89,11 @@ namespace Multiroom
         /// </summary>
         /// <param name="args"></param>
         /// <returns></returns>
-        public string Test(int channel)
-        { 
-            string path = @"test.wav";
-            int stream = Bass.BASS_StreamCreateFile(path, 0L, 0L, channels[channel]);
-
-            if (stream != 0)
-            {
-                Bass.BASS_ChannelPlay(stream, false);
-            }
-            else
-            {
-                // error creating the stream 
-                Multiroom.addLog("Stream error: " + Bass.BASS_ErrorGetCode());
-                return "Error " + Bass.BASS_ErrorGetCode();
-            }
-
+        public string Test(string channel)
+        {
+            string[] channels = new string[] { channel };
+            
+            Player.PlayInfo("test.wav", channels);
             return "OK";
         }
 
@@ -150,51 +110,49 @@ namespace Multiroom
             return "OK";
         }
 
-        public string Play(string id, string _channels)
+        public string Play(string id, string channels)
         {
 
             string path = Library.getFile(id);
-            Multiroom.addLog("Play "+path);
 
-            string[] chs = explode(",", _channels);
-            BASSFlag flags = 0;
-            for (int i = 0; i<chs.Length; i++)
-            {
-                flags = flags | channels[Convert.ToInt32(chs[i])];
-            }
-
-
-            int stream = Bass.BASS_StreamCreateFile(path, 0L, 0L, flags);
-            for (int i = 0; i < chs.Length; i++)
-            {
-                if (streams[Convert.ToInt32(chs[i])] !=0)
-                {
-                    Player.StopStream(streams[Convert.ToInt32(chs[i])]);
-                }
-                streams[Convert.ToInt32(chs[i])] = stream;
-            }
-            if (stream != 0)
-            {
-                Bass.BASS_ChannelPlay(stream, false);
-            }
-            else
-            {
-                // error creating the stream 
-                Multiroom.addLog("Stream error: " + Bass.BASS_ErrorGetCode());
-                return "Error " + Bass.BASS_ErrorGetCode();
-            }
+            string[] chs = explode(",", channels);
+            Player.Play(path, chs);
+            
             return "OK";
         }
 
-        public string Stop(string _channels)
+        public string Stop(string channels)
         {
-            string[] chs = explode(",", _channels);
-            BASSFlag flags = 0;
-            for (int i = 0; i < chs.Length; i++)
+            string[] chs = explode(",", channels);
+            Player.Stop(chs);
+            return "OK";
+        }
+
+        public string Say(string text, string channels)
+        {
+
+          
+            var guid = Guid.NewGuid();
+            string[] chs = explode(",", channels);
+            Directory.CreateDirectory("speech");
+            string filename = @"speech\"+ guid+".wav";
+            using (SpeechSynthesizer synth = new SpeechSynthesizer())
             {
-                Player.StopStream(streams[Convert.ToInt32(chs[i])]);
+                
+                // Configure the audio output. 
+                synth.SetOutputToWaveFile(filename);
+
+                // Build a prompt.
+                PromptBuilder builder = new PromptBuilder();
+                builder.AppendText(text);
+
+                // Speak the string asynchronously.
+                synth.Speak(builder);
+                builder = null;
+
             }
-           
+            Player.PlayInfo(filename, chs);
+
             return "OK";
         }
 
