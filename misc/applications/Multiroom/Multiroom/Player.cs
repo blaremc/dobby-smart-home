@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Un4seen.Bass;
 using System.IO;
 using System.Threading;
+using MySql.Data.MySqlClient;
 namespace Multiroom
 {
 
@@ -25,6 +26,174 @@ namespace Multiroom
         }
     }
 
+    struct Song
+    {
+        public string path;
+        public string name;
+        public int duration;
+        public int order;
+
+        public Song(string filename, int ord)
+        {
+            path = filename;
+            name = filename;
+            duration = 0;
+            order = ord;
+        }
+
+    }
+
+    class Playlist
+    {
+        const int REPEAT_NONE = 0;
+        const int REPEAT_ALL = 1;
+        const int REPEAT_SONG = 2;
+
+        private long id;
+        private string[] _channels;
+        private Dictionary<string, Song> _songs = new Dictionary<string, Song>();
+        private int _stream;
+        private string _current;
+        private int _repeat;
+        private bool _shuffle = true;
+        private string _name;
+
+        public Playlist(string[] files, string[] channels)
+        {
+            this._channels = channels;
+
+            for (int i = 0; i < files.Length; i++)
+            {
+                int ord = i;
+                if (_shuffle)
+                {
+                    bool find = true;
+                    Random rnd = new Random();
+                    while (find)
+                    {
+                        ord = rnd.Next(0, files.Length);
+                        foreach (KeyValuePair<string, Song> entry in _songs)
+                        {
+                            if (entry.Value.order == ord)
+                            {
+                                find = true;
+                                break;
+                            }
+                        }
+                        find = false;
+                    }
+                }
+                else
+                {
+
+                }
+                this._songs.Add(files[i], new Song(files[i], ord));
+            }
+        }
+        public long getId()
+        {
+            return this.id;
+        }
+
+        public void setId(long id)
+        {
+            this.id = id;
+        }
+
+        public string getName()
+        {
+            return this._name;
+        }
+
+        public string[] getChannels()
+        {
+            return _channels;
+        }
+
+        public bool removeChannels(string[] channels)
+        {
+            bool find = false;
+            for (int i = 0; i < _channels.Length; i++)
+            {
+                for (int j = 0; j < channels.Length; j++)
+                {
+                    if (_channels[i] == channels[j])
+                    {
+                        find = true;
+                        int numIdx = Array.IndexOf(_channels, _channels[i]);
+                        List<string> tmp = new List<string>(_channels);
+                        tmp.RemoveAt(numIdx);
+                        _channels = tmp.ToArray();
+                        i--;
+                        break;
+                    }
+                }
+            }
+            return find;
+        }
+
+        public bool hasChannels()
+        {
+            return _channels.Length > 0;
+        }
+
+        public Dictionary<string, Song> getSongs()
+        {
+            return _songs;
+
+        }
+        public bool getShuffle()
+        {
+            return _shuffle;
+        }
+
+        public int getRepeat()
+        {
+            return _repeat;
+        }
+
+        public void Play(string path)
+        {
+            this._current = path;
+            if (this._stream == 0) {
+                this._stream = Player.Play(path, _channels);
+            }
+            else
+            {
+                // Если это воспроизведение того же файла
+                Player.PlayStream(this._stream);
+            }
+        }
+
+        public void Next()
+        {
+            int ord = this._songs[this._current].order;
+            foreach (KeyValuePair<string, Song> entry in _songs)
+            {
+                if (entry.Value.order == ord + 1)
+                {
+                    Player.Play(entry.Key, this._channels);
+                    return;
+                }
+            }
+
+        }
+
+        public void Prev()
+        {
+            int ord = this._songs[this._current].order;
+            foreach (KeyValuePair<string, Song> entry in _songs)
+            {
+                if (entry.Value.order == ord - 1)
+                {
+                    Player.Play(entry.Key, this._channels);
+                    return;
+                }
+            }
+
+        }
+    }
+
 
     class Player
     {
@@ -37,6 +206,7 @@ namespace Multiroom
         static public Dictionary<int, BASSFlag> bass_channels;
 
         static public Dictionary<int, Stream> streams;
+        static public List<Playlist> playlists = new List<Playlist>();
 
         static private string[] playinfo_channels;
 
@@ -66,7 +236,7 @@ namespace Multiroom
             streams.Add(REAR, new Stream(0));
             streams.Add(SIDE, new Stream(0));
 
-     
+
         }
 
 
@@ -107,9 +277,15 @@ namespace Multiroom
             {
                 if (streams[Convert.ToInt32(channels[i])].bass_sream != 0)
                 {
-                    Player.StopStream(streams[Convert.ToInt32(channels[i])].bass_sream);
+                    Player.StopChannel(channels[i]);
                 }
             }
+        }
+
+        public static void StopChannel(string channel)
+        {
+
+            Player.StopStream(streams[Convert.ToInt32(channel)].bass_sream);
         }
 
         public static void setVolumeChannels(string[] channels, float value)
@@ -134,7 +310,34 @@ namespace Multiroom
 
         }
 
-        public static void Play(string filename, string[] channels)
+        public static Playlist CreatePlaylist(string[] files, string[] channels)
+        {
+            Playlist pl = new Playlist(files, channels);
+
+            for (int i = 0; i < playlists.Count; i++)
+            {
+                playlists[i].removeChannels(channels);
+
+            }
+            playlists.Add(pl);
+            return pl;
+        }
+
+        public static List<Playlist> getActivePlaylists()
+        {
+            List<Playlist> results = new List<Playlist>();
+            for (int i = 0; i < playlists.Count; i++)
+            {
+                if (playlists[i].hasChannels())
+                {
+                    results.Add(playlists[i]);
+                }
+            }
+            return results;
+        }
+
+
+        public static int Play(string filename, string[] channels)
         {
             BASSFlag flags = 0;
             for (int i = 0; i < channels.Length; i++)
@@ -147,7 +350,7 @@ namespace Multiroom
             {
                 if (streams[Convert.ToInt32(channels[i])].bass_sream != 0)
                 {
-                    Player.StopStream(streams[Convert.ToInt32(channels[i])].bass_sream);
+                    Player.StopChannel(channels[i]);
                 }
                 Stream st = streams[Convert.ToInt32(channels[i])];
                 st.bass_sream = stream;
@@ -156,12 +359,14 @@ namespace Multiroom
             if (stream != 0)
             {
                 Player.PlayStream(stream);
+                return stream;
             }
             else
             {
                 // error creating the stream 
                 Multiroom.addLog("Stream error: " + Bass.BASS_ErrorGetCode());
                 throw new Exception("Error " + Bass.BASS_ErrorGetCode());
+                return 0;
             }
         }
 

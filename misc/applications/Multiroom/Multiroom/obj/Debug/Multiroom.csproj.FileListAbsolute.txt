@@ -6,3 +6,5 @@ C:\Development\Sites\dobby\misc\applications\Multiroom\Multiroom\obj\Debug\Multi
 C:\Development\Sites\dobby\misc\applications\Multiroom\Multiroom\obj\Debug\Multiroom.pdb
 C:\Development\Sites\dobby\misc\applications\Multiroom\Multiroom\obj\Debug\Multiroom.csprojResolveAssemblyReference.cache
 C:\Development\Sites\dobby\misc\applications\Multiroom\Multiroom\bin\Debug\Microsoft.MSXML.dll
+C:\Development\Sites\dobby\misc\applications\Multiroom\Multiroom\bin\Debug\Newtonsoft.Json.dll
+C:\Development\Sites\dobby\misc\applications\Multiroom\Multiroom\bin\Debug\Newtonsoft.Json.xml

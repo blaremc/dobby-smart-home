@@ -8,6 +8,7 @@ using System.Web;
 using System.Configuration;
 using System.Speech.Synthesis;
 using System.Speech.AudioFormat;
+using Newtonsoft.Json;
 
 namespace Multiroom
 {
@@ -73,6 +74,8 @@ namespace Multiroom
                         return Stop( HttpUtility.ParseQueryString(message).Get("channels"));
                     case "say":
                         return Say(HttpUtility.ParseQueryString(message).Get("text"), HttpUtility.ParseQueryString(message).Get("channels"));
+                    case "getplaylists":
+                        return GetPlayLists();
                 }
             }
             catch (Exception ex)
@@ -114,10 +117,11 @@ namespace Multiroom
         {
 
             string path = Library.getFile(id);
-
+            string[] paths = Library.getFilesFromParentFolder(id);
             string[] chs = explode(",", channels);
-            Player.Play(path, chs);
-            
+            Playlist pl = Player.CreatePlaylist(paths, chs);
+            pl.Play(path);
+            Library.savePlaylist(pl);
             return "OK";
         }
 
@@ -154,6 +158,26 @@ namespace Multiroom
             Player.PlayInfo(filename, chs);
 
             return "OK";
+        }
+
+        public string GetPlayLists()
+        {
+            List<Playlist> list = Player.getActivePlaylists();
+            string result = "";
+
+            List <Dictionary <string, string>> res = new List<Dictionary<string, string>>();
+            Dictionary<string, string> dic;
+            for (int i=0; i<list.Count; i++)
+            {
+                dic = new Dictionary<string, string>();
+                dic.Add("PlaylistId", list[i].getId().ToString());
+                dic.Add("Channels", string.Join(",", list[i].getChannels().Select(x => x.ToString()).ToArray()));
+                res.Add(dic);
+            }
+   
+            string json = JsonConvert.SerializeObject(res);
+
+            return json;
         }
 
 
