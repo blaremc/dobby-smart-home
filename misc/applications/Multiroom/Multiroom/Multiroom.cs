@@ -70,6 +70,8 @@ namespace Multiroom
                         return Scan();
                     case "play":
                         return Play(HttpUtility.ParseQueryString(message).Get("id"), HttpUtility.ParseQueryString(message).Get("channels"));
+                    case "pause":
+                        return Pause(HttpUtility.ParseQueryString(message).Get("id"));
                     case "stop":
                         return Stop( HttpUtility.ParseQueryString(message).Get("channels"));
                     case "say":
@@ -132,6 +134,18 @@ namespace Multiroom
             return "OK";
         }
 
+        public string Pause(string playlist_id)
+        {
+            Playlist pl = Player.getPlaylist(playlist_id);
+            if (pl == null)
+            {
+                return "This playlist doen't exist";
+            }
+            pl.Pause();
+            return "OK";
+        }
+
+
         public string Say(string text, string channels)
         {
 
@@ -172,6 +186,7 @@ namespace Multiroom
                 dic = new Dictionary<string, string>();
                 dic.Add("PlaylistId", list[i].getId().ToString());
                 dic.Add("Channels", string.Join(",", list[i].getChannels().Select(x => x.ToString()).ToArray()));
+                dic.Add("Current", list[i].getCurrentSong());
                 res.Add(dic);
             }
    

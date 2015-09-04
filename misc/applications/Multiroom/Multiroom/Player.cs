@@ -57,6 +57,7 @@ namespace Multiroom
         private int _repeat;
         private bool _shuffle = true;
         private string _name;
+        private bool _is_playing = false;
 
         public Playlist(string[] files, string[] channels)
         {
@@ -110,6 +111,11 @@ namespace Multiroom
             return _channels;
         }
 
+        public string getCurrentSong()
+        {
+            return _current;
+        }
+
         public bool removeChannels(string[] channels)
         {
             bool find = false;
@@ -155,13 +161,32 @@ namespace Multiroom
         public void Play(string path)
         {
             this._current = path;
-            if (this._stream == 0) {
-                this._stream = Player.Play(path, _channels);
+            if (_stream == 0) {
+                _stream = Player.Play(path, _channels);
             }
             else
             {
                 // Если это воспроизведение того же файла
-                Player.PlayStream(this._stream);
+                Player.PlayStream(_stream);
+            }
+            _is_playing = true;
+        }
+
+        public void Pause()
+        {
+            if (_stream != 0)
+            {
+                _is_playing = false;
+                Player.PauseStream(_stream);
+            }
+        }
+
+        public void Stop()
+        {
+            if (_stream != 0)
+            {
+                _is_playing = false;
+                Player.StopStream(_stream);
             }
         }
 
@@ -172,7 +197,7 @@ namespace Multiroom
             {
                 if (entry.Value.order == ord + 1)
                 {
-                    Player.Play(entry.Key, this._channels);
+                    this.Play(entry.Key);
                     return;
                 }
             }
@@ -186,7 +211,7 @@ namespace Multiroom
             {
                 if (entry.Value.order == ord - 1)
                 {
-                    Player.Play(entry.Key, this._channels);
+                    this.Play(entry.Key);
                     return;
                 }
             }
@@ -302,7 +327,6 @@ namespace Multiroom
 
         public static void Stop(string[] channels)
         {
-            BASSFlag flags = 0;
             for (int i = 0; i < channels.Length; i++)
             {
                 Player.StopStream(streams[Convert.ToInt32(channels[i])].bass_sream);
@@ -336,6 +360,18 @@ namespace Multiroom
             return results;
         }
 
+        public static Playlist getPlaylist(string id)
+        {
+            for (int i = 0; i < playlists.Count; i++)
+            {
+                if (playlists[i].getId() == Convert.ToInt32(id))
+                {
+                    return playlists[i];
+                }
+            }
+            return null;
+        }
+
 
         public static int Play(string filename, string[] channels)
         {
@@ -365,7 +401,7 @@ namespace Multiroom
             {
                 // error creating the stream 
                 Multiroom.addLog("Stream error: " + Bass.BASS_ErrorGetCode());
-                throw new Exception("Error " + Bass.BASS_ErrorGetCode());
+               // throw new Exception("Error " + Bass.BASS_ErrorGetCode());
                 return 0;
             }
         }
