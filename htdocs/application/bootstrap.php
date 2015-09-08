@@ -115,7 +115,7 @@ Kohana::$log->attach(new Log_File(MAINROOT . 'logs/task'), Log::TASK, Log::TASK)
  * Attach a file reader to config. Multiple readers are supported.
  */
 Kohana::$config->attach(new Config_File);
-
+Kohana::$config->attach(new Config_File('config/local'));
 /**
  * Enable modules. Modules are referenced by a relative or absolute path.
  */
