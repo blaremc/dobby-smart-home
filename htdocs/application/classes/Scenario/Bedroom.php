@@ -142,6 +142,7 @@ class Scenario_Bedroom extends Dobby_Scenario {
     protected function setWindowLight($enable) {
         $this->device('BedroomLights')->setValue('2:' . $enable);
         $this->set('enable_window_light', $enable);
+        $this->saveData();
     }
 
 
@@ -154,6 +155,7 @@ class Scenario_Bedroom extends Dobby_Scenario {
     protected function setMainLight($enable) {
         $this->device('BedroomLights')->setValue('1:' . $enable);
         $this->set('enable_main_light', $enable);
+        $this->saveData();
     }
 
 }
