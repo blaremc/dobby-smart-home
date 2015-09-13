@@ -14,7 +14,7 @@ IPAddress ip(192,168,1,116);
 EthernetServer server(80);
 EthernetClient client;
 
-byte SERVER[] = { 192, 168, 1, 2 };
+byte SERVER[] = { 192, 168, 1, 4 };
 EthernetClient client_get;
 
 #define REQUESTSIZE 200
