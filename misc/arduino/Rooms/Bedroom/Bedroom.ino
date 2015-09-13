@@ -5,6 +5,7 @@
 #include <EthernetServer.h>
 #include <EthernetUdp.h>
 
+#include <IRremote.h>
 #include <SPI.h>
 #include <Ethernet.h>
 
@@ -17,10 +18,10 @@ EthernetClient client;
 byte SERVER[] = { 192, 168, 1, 4 };
 EthernetClient client_get;
 
-#define REQUESTSIZE 200
+#define REQUESTSIZE 1000
 
 #define IRCOMMANDSSIZE 20
-String IRCOMMANDS[IRCOMMANDSSIZE]; 
+String IRACTIONS[IRCOMMANDSSIZE]; 
 
 #define PARAMSSIZE 8
 char PARAMS[PARAMSSIZE][10];  
@@ -65,6 +66,18 @@ byte LED2SMOOTH = 0;
 #define RELE1PIN 23 // Реле 1
 #define RELE2PIN 24 // Реле 2
 
+IRrecv irrecv(IRRPIN);
+decode_results results;
+long IRCOMMANDS[10];
+int codeType = -1; // The type of code
+unsigned int rawCodes[RAWBUF]; // The durations if raw
+unsigned long codeValue; // The code value if not raw
+
+IRsend irsend;
+
+
+
+
 
 byte MOTIONVALUE = 0;
 int MOTIONTIME = 0;
@@ -105,7 +118,7 @@ void setup(void) {
   pinMode(LED2REDPIN, OUTPUT);
   pinMode(LED2GREENPIN, OUTPUT);
   pinMode(LED2BLUEPIN, OUTPUT);
-  
+  irrecv.enableIRIn();
   pinMode(LIGHTPIN, OUTPUT);
   pinMode(MOTIONPIN, INPUT);
   pinMode(RELE1PIN, OUTPUT);
@@ -211,7 +224,7 @@ void act(){
     return;
   } 
   
-  client.println("Kitchen Arduino");
+  client.println("Bedroom Arduino");
   client.println("Version 2.0");
   client.print("MOTION = ");
   client.println(MOTIONVALUE);
@@ -271,6 +284,19 @@ void loop(void) {
         LIGHTVALUE = TEMPVALUE;
      }
    }
+
+
+    // ИК приемник
+  if (irrecv.decode(&results)) // Если данные пришли 
+  {
+    
+    for (int i=0; i<9; i++){
+      IRCOMMANDS[i] = IRCOMMANDS[i+1];
+    }    
+    IRCOMMANDS[9] = results.value;
+    storeCode(&results);
+    irrecv.resume(); // Принимаем следующую команду
+  }
  
   
   if (LED1REDTARGET != LED1REDVALUE || LED1GREENTARGET != LED1GREENVALUE || LED1BLUETARGET != LED1BLUEVALUE){
@@ -321,24 +347,11 @@ void loop(void) {
   }
     
         
-  if(client){
-           
-     char request[REQUESTSIZE];
-
-     getServerResponse(request, client);
-     
-     sendHeaders(client);       
-       bool again = false;
-       bool res = true;
-       while (res){   
-         res = parseRequest(request, again);
-         Serial.print("res ");
-         Serial.println(res);
-         again = true;
-         act();       
-       }
-
-    
+  if(client){ 
+    String result = getServerResponse(client);
+    result = result.substring(result.indexOf("GET /") + 5, result.indexOf("\n"));
+    sendHeaders(client);       
+    doCommands(result); 
     delay(1);
     client.stop();
   }
@@ -358,39 +371,47 @@ if (IRSENDTIME >= IRGETDELAY) {
 
 }
 
+void doCommands(String commands){
 
-void getServerResponse(char* request , EthernetClient client){
+  char request[REQUESTSIZE];
+  commands.toCharArray(request, commands.length());
+  bool again = false;
+  bool res = true;
+  while (res){   
+   res = parseRequest(request, again);
+   again = true;
+   Serial.print("COMMAND = ");
+   Serial.println(METHOD);
+   for (int i=0; i<10; i++){
+   Serial.print("PARAMS[");
+   Serial.print(i);
+   Serial.print("] = ");
+   Serial.println(PARAMS[i]);
+    
+   }
+   act();       
+ }
+  
+}
+
+String getServerResponse(EthernetClient client){
 
     
      byte reqInd = 0;
      boolean currentLineIsBlank = true;
 
+     String req = String("");
+
  while (client.connected()) {
 
      if (client.available()) {
         char c = client.read();        
-        if (c == '\n' && currentLineIsBlank) {
-    
-           char* cbuf =getRequest(request);
-           strcpy(request,cbuf);
-           sendHeaders(client);       
-      
-          break;
-        }
-        if (c == '\n') {
-        
-          currentLineIsBlank = true;
-        } 
-        else if (c != '\r') {          
-          if (reqInd>REQUESTSIZE){
-            continue;
-          }
-          request[reqInd] = c;         
-          reqInd++;
-          currentLineIsBlank = false;
-        }
+        req += c;        
       }
     }
+    Serial.print("String ");
+    Serial.println(req);
+    return req;
 }
 
 
@@ -410,16 +431,56 @@ void getIRCommand() {
     if (res){
      client_get.print("GET /ajax/ircommand");    
      client_get.println(" HTTP/1.1");
-     client_get.println("Host: 192.168.1.2");
-     client_get.println("Connection: keep-alive");
-     client_get.println("Keep-Alive: timeout=30, max=100");
+     client_get.println("Host: 192.168.1.4");
      client_get.println("User-Agent: arduino-ethernet");
-     client_get.println("Content-Type: text/html\n");
-     delay(500);
-     char request[REQUESTSIZE];
-     getServerResponse(request, client);
-     Serial.println(request);
+     client_get.println("Connection: close");
+     client_get.println();
+     //delay(1500);
+     String result = getServerResponse(client_get);
+     result = result.substring(result.indexOf("\r\n\r\n") + 4);
+    
+    int i = 0;
+    int ind = 0;
+    while (ind != -1 && i<= IRCOMMANDSSIZE){
+      IRACTIONS[i] = result.substring(ind, result.indexOf("\n", ind));
+      Serial.print("IR ");
+      Serial.println(IRACTIONS[i]);
+      ind = result.indexOf("\n", ind);
+      if (ind!=-1){
+        ind++;
+      }
+      i++;
+    }
+    for (int j=i; j<IRCOMMANDSSIZE; j++){
+      IRACTIONS[j] = "";
+    }
+     
     }  
+}
+void sentValueToServer(){
+
+    client_get.stop();    
+    Serial.println("connecting...");
+    int ret = client_get.connect(SERVER, 80);    
+  if (ret) {
+    Serial.println("connected");
+    // Make a HTTP request:
+   client_get.print(buf);
+   client_get.println(" HTTP/1.0");
+   client_get.println("Host: 192.168.1.4");
+   client_get.println(ipbuff); // ip адрес нашего контроллера в текстовом виде
+   client_get.print("Content-Type: text/html\n");
+   client_get.println("Connection: close\n");
+   delay(2000);
+   client_get.stop();
+  }
+  else {
+    // kf you didn't get a connection to the server:
+    Serial.println("connection failed");
+    Serial.print("Error: ");
+    Serial.println(ret);
+    Serial.println(client_get.status());
+  }
 }
 
 void sendToServer() {
@@ -524,3 +585,91 @@ bool parseRequest(char *request, bool again){
    }
    return false;
 }
+
+
+void storeCode(decode_results *results) {
+  codeType = results->decode_type;
+  int count = results->rawlen;
+  if (codeType == UNKNOWN) {
+    Serial.println("Received unknown code, saving as raw");
+    codeLen = results->rawlen - 1;
+    // To store raw codes:
+    // Drop first value (gap)
+    // Convert from ticks to microseconds
+    // Tweak marks shorter, and spaces longer to cancel out IR receiver distortion
+    for (int i = 1; i <= codeLen; i++) {
+      if (i % 2) {
+        // Mark
+        rawCodes[i - 1] = results->rawbuf[i]*USECPERTICK - MARK_EXCESS;
+        Serial.print(" m");
+      } 
+      else {
+        // Space
+        rawCodes[i - 1] = results->rawbuf[i]*USECPERTICK + MARK_EXCESS;
+        Serial.print(" s");
+      }
+      Serial.print(rawCodes[i - 1], DEC);
+    }
+    Serial.println("");
+  }
+  else {
+    if (codeType == NEC) {
+      Serial.print("Received NEC: ");
+      if (results->value == REPEAT) {
+        // Don't record a NEC repeat value as that's useless.
+        Serial.println("repeat; ignoring.");
+        return;
+      }
+    } 
+    else if (codeType == SONY) {
+      Serial.print("Received SONY: ");
+    } 
+    else if (codeType == RC5) {
+      Serial.print("Received RC5: ");
+    } 
+    else if (codeType == RC6) {
+      Serial.print("Received RC6: ");
+    } 
+    else {
+      Serial.print("Unexpected codeType ");
+      Serial.print(codeType, DEC);
+      Serial.println("");
+    }
+    Serial.println(results->value, HEX);
+    codeValue = results->value;
+    codeLen = results->bits;
+    // Send data to server
+    int res = checkIRCode();
+    Serial.print("res = ");
+    Serial.println(res);
+    if (res){
+      sprintf(buf, "%sdevice[]=%s&value[]=%i_%lu_1&", buf, "ir",codeType,(int)codeValue);   
+    }else{
+      sprintf(buf, "%sdevice[]=%s&value[]=%i_%lu_0&", buf, "ir",codeType,(int)codeValue);   
+    }
+    isclearbuf = 0;
+  }
+
+}
+
+int checkIRCode(){
+  String command = String("");
+  
+  char com[80];
+  sprintf(com, "%i_%lu&",codeType,(int)codeValue);   
+  command += com;
+  
+  for (int i=0; i<IRCOMMANDSSIZE; i++){
+      if (IRACTIONS[i].indexOf(command)!=-1){
+        doIRCommand(IRACTIONS[i]);      
+        return 1;  
+      }    
+  }     
+  return 0;
+}
+
+void doIRCommand(String command){
+  command =  command.substring(command.indexOf(" ") + 1);
+  doCommands(command);
+}
+
