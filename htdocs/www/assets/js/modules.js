@@ -1,6 +1,5 @@
 $(function () {
 
-
     $(document).on('click', '.js-multiroom-test', function (e) {
 
         e.preventDefault();
@@ -30,13 +29,19 @@ $(function () {
     });
 
 
-
     $(document).on('click', '.js-multiroom-say', function (e) {
         e.preventDefault();
         var channels = $('[name="room"]:checked').map(function () {
             return $(this).val()
         }).get().join(',');
         $.post('/ajax/multiroom/say', {channels: channels});
+    });
+
+    $(document).on('click', '.js-play-pause', function (e) {
+        e.preventDefault();
+        if ($(e.target).hasClass('pause')) {
+        } else {
+        }
     });
 });
 $(function () {
@@ -85,7 +90,7 @@ $(function () {
         },
         onchange: function (container, color) {
 
-            ledPost( '/ajax/light/set', {
+            ledPost('/ajax/light/set', {
                 smooth: $('#smooth').val(),
                 l: color.hsla.l,
                 id: $('#id').val()

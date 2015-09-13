@@ -1,0 +1,65 @@
+.multiroom-room {
+    margin-bottom: 20px;
+    border-radius: 2px;
+
+}
+
+.multiroom-room .head {
+    padding: 10px;
+    background: #4D4D4D;
+    border-bottom: 1px solid #333;
+}
+
+.multiroom-room .name {
+    font-weight: bold;
+}
+
+.multiroom-room .playlist {
+    color: #999;
+}
+
+.multiroom-room .detail {
+    border-top: 1px solid #777;
+    background: #393939;
+    padding: 10px;
+}
+
+.multiroom-room .controls {
+    margin-top: 10px;
+}
+
+.multiroom-room .controls .play {
+    background-image: url("../img/multiroom_play.png");
+    width: 40px;
+    height: 40px;
+}
+
+.multiroom-room .controls .pause {
+    background-image: url("../img/multiroom_pause.png");
+    width: 40px;
+    height: 40px;
+    background-color: #DEED79;
+}
+.multiroom-room .controls .stop {
+    background-image: url("../img/multiroom_stop.png");
+}
+.multiroom-room .controls .prev {
+    background-image: url("../img/multiroom_rewind.png");
+}
+.multiroom-room .controls .next {
+    background-image: url("../img/multiroom_fast_forward.png");
+}
+.multiroom-room .controls a {
+    background-color: #EDB579;
+    background-repeat: no-repeat;
+    background-position: center;
+    display: inline-block;
+    border-radius: 30px;
+    width: 30px;
+    height: 30px;
+    margin-right: 5px;
+}
+
+.multiroom-room .controls a:hover {
+    background-color: #89D62B;
+}

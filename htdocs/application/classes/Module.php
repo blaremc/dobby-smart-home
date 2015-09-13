@@ -15,15 +15,9 @@ class Module {
     public function __construct($name) {
 
         $this->name = $name;
-        $this->_module = Database::instance()->prepare('SELECT id_modules, data FROM modules WHERE name=:name')
-            ->bindValue(':name', $this->name)
-            ->execute()
-            ->fetch();
+        $this->_module = Database::instance()->prepare('SELECT id_modules, data FROM modules WHERE name=:name')->bindValue(':name', $this->name)->execute()->fetch();
         if (empty($this->_module['id_modules'])) {
-            $this->_module['id_modules'] = Database::instance()->prepare('INSERT INTO modules(name, data, create_date, last_date) VALUES(:name, null, NOW(), NOW())')
-                ->bindValue(':name', $this->name)
-                ->execute()
-                ->lastInsertId();
+            $this->_module['id_modules'] = Database::instance()->prepare('INSERT INTO modules(name, data, create_date, last_date) VALUES(:name, null, NOW(), NOW())')->bindValue(':name', $this->name)->execute()->lastInsertId();
         }
         if (empty($this->_module['data'])) {
             $this->_module['data'] = array('values' => array(), 'increment' => 1);
@@ -90,10 +84,7 @@ class Module {
      */
     private function _save() {
 
-        Database::instance()->prepare('UPDATE modules SET data=:data, last_date = NOW() WHERE id_modules=:id')
-            ->bindValue(':id', $this->_module['id_modules'])
-            ->bindValue(':data', json_encode($this->_module['data']))
-            ->execute();
+        Database::instance()->prepare('UPDATE modules SET data=:data, last_date = NOW() WHERE id_modules=:id')->bindValue(':id', $this->_module['id_modules'])->bindValue(':data', json_encode($this->_module['data']))->execute();
     }
 
     /**
@@ -143,18 +134,28 @@ class Module {
     }
 
     public static function compileModuleCSS() {
-        $jsSource = array();
+        $cssSource = array();
         $contents = array();
         foreach (Dobby::$modules as $module) {
-            $jsSource = array_merge($jsSource, self::getFiles(MODPATH_DOBBY, $module['name'] . '/css/', 'css'));
+            $cssSource = array_merge($cssSource, self::getFiles(MODPATH_DOBBY, $module['id'] . '/css/', 'css'));
         }
-        foreach ($jsSource as $file) {
+        foreach ($cssSource as $file) {
             $contents[] = file_get_contents(MODPATH_DOBBY . $file);
         }
         $out = implode("\n", $contents);
         file_put_contents(DOCROOT . '/assets/css/modules.css', $out);
     }
 
+    public static function copyImg() {
+        $destDir = DOCROOT . '/assets/img/';
+        foreach (Dobby::$modules as $module) {
+            $files =  self::getFiles(MODPATH_DOBBY . '/' . $module['id'] . '/img/', '', '*');
+            foreach ($files as $file) {
+                copy(MODPATH_DOBBY . '/' . $module['id'] . '/img/' . $file, $destDir . $file);
+            }
+        }
+
+    }
 
     public static function getFiles($root, $path, $ext) {
 
@@ -186,7 +187,7 @@ class Module {
                 $files = array_merge($files, self::getFiles($root, $path . DIRECTORY_SEPARATOR . $filename, $ext));
                 continue;
             }
-            if (substr($filename, -strlen($ext) - 1) != '.' . $ext) {
+            if ($ext != '*' && substr($filename, -strlen($ext) - 1) != '.' . $ext) {
                 continue;
             } else if ($path) {
                 $filename = $path . DIRECTORY_SEPARATOR . $filename;

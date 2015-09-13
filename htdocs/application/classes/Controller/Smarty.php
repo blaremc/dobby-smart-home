@@ -49,6 +49,7 @@ class Controller_Smarty extends Controller {
         parent::after();
         Module::compileModuleJS();
         Module::compileModuleCSS();
+        Module::copyImg();
     }
 
 

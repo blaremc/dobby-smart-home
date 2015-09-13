@@ -7,7 +7,7 @@
     <link href="/assets/css/jquery.qtip.min.css" rel="stylesheet">
     <link href="/assets/css/jquery-ui-1.9.2.custom.min.css" rel="stylesheet">
     <link href="/assets/css/main.css" rel="stylesheet">
-
+    <link href="/assets/css/modules.css" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
@@ -20,5 +20,6 @@
 <script src="/assets/js/bootstrap.js"></script>
 <script src="/assets/js/app.js"></script>
 <script src="/assets/js/main.js"></script>
+<script src="/assets/js/modules.js"></script>
 </body>
 </html>
