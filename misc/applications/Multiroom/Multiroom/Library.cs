@@ -197,7 +197,7 @@ namespace Multiroom
             foreach (KeyValuePair<string, Song> entry in songs)
             {
                 insert.Parameters["@id_songs"].Value = GenerateMD5(entry.Value.path);
-                insert.Parameters["@ord"].Value = entry.Value.order;
+                insert.Parameters["@ord"].Value = entry.Value.index;
                 insert.ExecuteNonQuery();
             }
             

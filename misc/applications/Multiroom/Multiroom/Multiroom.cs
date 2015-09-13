@@ -187,6 +187,9 @@ namespace Multiroom
                 dic.Add("PlaylistId", list[i].getId().ToString());
                 dic.Add("Channels", string.Join(",", list[i].getChannels().Select(x => x.ToString()).ToArray()));
                 dic.Add("Current", list[i].getCurrentSong());
+                dic.Add("IsPlaying", list[i].isPlaying()?"1":"0");
+                dic.Add("Duration", list[i].getCurrentDuration().ToString());
+                dic.Add("Position", list[i].getCurrentPosition().ToString());
                 res.Add(dic);
             }
    

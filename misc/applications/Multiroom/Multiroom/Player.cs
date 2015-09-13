@@ -32,13 +32,15 @@ namespace Multiroom
         public string name;
         public int duration;
         public int order;
+        public int index;
 
-        public Song(string filename, int ord)
+        public Song(string filename, int ord, int ind)
         {
             path = filename;
             name = filename;
             duration = 0;
             order = ord;
+            index = ind;
         }
 
     }
@@ -88,7 +90,7 @@ namespace Multiroom
                 {
 
                 }
-                this._songs.Add(files[i], new Song(files[i], ord));
+                this._songs.Add(files[i], new Song(files[i], ord, i));
             }
         }
         public long getId()
@@ -116,6 +118,27 @@ namespace Multiroom
             return _current;
         }
 
+        public bool isPlaying()
+        {
+            return _is_playing;
+        }
+
+        public double getCurrentDuration()
+        {
+            // length in bytes 
+            long len = Bass.BASS_ChannelGetLength(_stream, BASSMode.BASS_POS_BYTES);
+            // the time length 
+            double time = Bass.BASS_ChannelBytes2Seconds(_stream, len);
+            return Math.Round(time, 2);
+        }
+
+        public double getCurrentPosition()
+        {
+            // playback duration 
+            double time = Bass.BASS_ChannelBytes2Seconds(_stream, Bass.BASS_ChannelGetPosition(_stream));
+            return Math.Round(time,2);
+        }
+
         public bool removeChannels(string[] channels)
         {
             bool find = false;
@@ -138,6 +161,26 @@ namespace Multiroom
             return find;
         }
 
+
+        public bool stopChannels(string[] channels)
+        {
+            bool find = false;
+            for (int i = 0; i < _channels.Length; i++)
+            {
+                for (int j = 0; j < channels.Length; j++)
+                {
+                    if (_channels[i] == channels[j])
+                    {
+                        Stop();
+                    }
+                }
+            }
+            return find;
+        }
+
+
+
+        
         public bool hasChannels()
         {
             return _channels.Length > 0;
@@ -327,9 +370,10 @@ namespace Multiroom
 
         public static void Stop(string[] channels)
         {
-            for (int i = 0; i < channels.Length; i++)
+            for (int i = 0; i < playlists.Count; i++)
             {
-                Player.StopStream(streams[Convert.ToInt32(channels[i])].bass_sream);
+                playlists[i].stopChannels(channels);
+
             }
 
         }
