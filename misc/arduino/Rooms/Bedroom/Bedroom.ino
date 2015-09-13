@@ -88,7 +88,7 @@ long MINSENDDELAY = 5000;
 long MAXSENDDELAY = 200000;
 
 long IRGETDELAY = 200000;
-long IRSENDTIME = 0;
+long IRSENDTIME = 200000;
 
 int LIGHTVALUE = -1;
 int LIGHTTIME = 0;
@@ -142,19 +142,39 @@ void act(){
   
   if (strcmp(METHOD, "setRele") == 0){  
     if (atoi(PARAMS[0])==1){
-      RELE1VALUE = atoi(PARAMS[1]);
-      if (atoi(PARAMS[1])==0){       
+     
+      if (strcmp(PARAMS[1],"t")==0 ){ 
+       
+        if (RELE1VALUE){
+          digitalWrite(RELE1PIN, HIGH); 
+          RELE1VALUE = 0;
+        }else {
+          digitalWrite(RELE1PIN, LOW); 
+          RELE1VALUE = 1;
+        }        
+      } else if (atoi(PARAMS[1])==0){       
         digitalWrite(RELE1PIN, HIGH); 
-      } else {      
+        RELE1VALUE = 0;
+      } else if (atoi(PARAMS[1])==1 ){           
         digitalWrite(RELE1PIN, LOW); 
+        RELE1VALUE = 1;
       }
     }
-    if (atoi(PARAMS[0])==2){
-      RELE2VALUE = atoi(PARAMS[1]);
-      if (atoi(PARAMS[1])==0){
+    if (atoi(PARAMS[0])==2){      
+       if (strcmp(PARAMS[1],"t")==0 ){ 
+        if (RELE2VALUE){
+          digitalWrite(RELE1PIN, HIGH); 
+          RELE2VALUE = 0;
+        }else {
+          digitalWrite(RELE1PIN, LOW); 
+          RELE2VALUE = 1;
+        } 
+      } else  if (atoi(PARAMS[1])==0){
         digitalWrite(RELE2PIN, HIGH); 
-      } else {
+        RELE2VALUE = 0;
+      } else if (atoi(PARAMS[1])==1 ){ 
         digitalWrite(RELE2PIN, LOW); 
+        RELE2VALUE = 1;
       }
     }
     return;
@@ -345,13 +365,12 @@ void loop(void) {
       }
     }
   }
-    
         
   if(client){ 
     String result = getServerResponse(client);
-    result = result.substring(result.indexOf("GET /") + 5, result.indexOf("\n"));
-    sendHeaders(client);       
+    result = result.substring(result.indexOf("GET /") + 5, result.indexOf(" ", 5));         
     doCommands(result); 
+    sendHeaders(client); 
     delay(1);
     client.stop();
   }
@@ -363,18 +382,17 @@ void loop(void) {
     sendToServer();  
   }
 
-
-if (IRSENDTIME >= IRGETDELAY) {
+  if (IRSENDTIME >= IRGETDELAY) {
     IRSENDTIME = 0;
     getIRCommand();  
   }
-
 }
 
 void doCommands(String commands){
-
+  Serial.print("doCommands ");
+  Serial.println(commands);
   char request[REQUESTSIZE];
-  commands.toCharArray(request, commands.length());
+  commands.toCharArray(request, commands.length() + 1);
   bool again = false;
   bool res = true;
   while (res){   
@@ -395,26 +413,23 @@ void doCommands(String commands){
 }
 
 String getServerResponse(EthernetClient client){
-
     
-     byte reqInd = 0;
-     boolean currentLineIsBlank = true;
-
-     String req = String("");
-
- while (client.connected()) {
-
+  byte reqInd = 0;
+  boolean currentLineIsBlank = true;
+  String req = String("");
+  
+  while (client.connected()) {
+  
      if (client.available()) {
         char c = client.read();        
         req += c;        
       }
-    }
-    Serial.print("String ");
-    Serial.println(req);
-    return req;
+  }
+  
+  Serial.print("String ");
+  Serial.println(req);
+  return req;
 }
-
-
 
 void getIRCommand() {
 
@@ -443,6 +458,7 @@ void getIRCommand() {
     int ind = 0;
     while (ind != -1 && i<= IRCOMMANDSSIZE){
       IRACTIONS[i] = result.substring(ind, result.indexOf("\n", ind));
+      IRACTIONS[i].trim();
       Serial.print("IR ");
       Serial.println(IRACTIONS[i]);
       ind = result.indexOf("\n", ind);
@@ -550,7 +566,7 @@ char *getRequest(char *request) {
 
 bool parseRequest(char *request, bool again){
   strcpy(request , request);
-   char *pos;
+  char *pos;
   if (again) {
    pos= strtok(NULL, ":");
   }else {
@@ -561,8 +577,6 @@ bool parseRequest(char *request, bool again){
    }else {
      strcpy(METHOD , pos);
    }
-     Serial.print("METHOD ");
-       Serial.println(METHOD);
    
    for (int i=0; i<PARAMSSIZE; i++){
      memset(PARAMS[i], 0, sizeof PARAMS[i]);
@@ -570,17 +584,18 @@ bool parseRequest(char *request, bool again){
    }   
    int ind = 0;
   
-    pos = strtok(NULL,":");
-  
+   pos = strtok(NULL,":");
+ 
    if (pos!=NULL){
      while (pos!=NULL){
-       if (strcmp(pos,"%7C") == 0){
+       if (strcmp(pos,"%7C") == 0 || strcmp(pos,"|") == 0){
            return true;      
        }
-       strcpy(PARAMS[ind] , pos);    
-       pos = strtok(NULL,":"); 
-      
+       strcpy(PARAMS[ind] , pos);
+   
+       pos = strtok(NULL,":");       
        ind++;
+     
      }
    }
    return false;
@@ -639,9 +654,12 @@ void storeCode(decode_results *results) {
     codeValue = results->value;
     codeLen = results->bits;
     // Send data to server
-    int res = checkIRCode();
-    Serial.print("res = ");
-    Serial.println(res);
+
+
+    char tbuf[80];
+    sprintf(tbuf, "%i_%lu",codeType,(int)codeValue);   
+    Serial.println(tbuf);
+    int res = checkIRCode(String(tbuf));
     if (res){
       sprintf(buf, "%sdevice[]=%s&value[]=%i_%lu_1&", buf, "ir",codeType,(int)codeValue);   
     }else{
@@ -652,14 +670,18 @@ void storeCode(decode_results *results) {
 
 }
 
-int checkIRCode(){
-  String command = String("");
+int checkIRCode(String command){
+
   
-  char com[80];
-  sprintf(com, "%i_%lu&",codeType,(int)codeValue);   
-  command += com;
-  
+  Serial.print("SEARCH COMMAND ");
+  Serial.println(command);
   for (int i=0; i<IRCOMMANDSSIZE; i++){
+    
+     Serial.print("COMMAND ");
+     Serial.print(IRACTIONS[i]);
+     Serial.print(" RES ");
+     Serial.println(IRACTIONS[i].indexOf(command));
+        
       if (IRACTIONS[i].indexOf(command)!=-1){
         doIRCommand(IRACTIONS[i]);      
         return 1;  

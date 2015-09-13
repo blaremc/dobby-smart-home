@@ -4,6 +4,8 @@
 abstract class Dobby_Scenario {
 
 
+    protected $silence = false;
+
     /**
      * Subscribed events
      *

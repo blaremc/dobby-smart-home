@@ -71,6 +71,14 @@ class Scenario_Bedroom extends Dobby_Scenario {
 
     protected function recieveIR() {
         $value = $this->device('BedroomIR')->last_value;
+        $arr = explode('_', $value);
+        $this->silence = false;
+        if (count($arr) == 3) {
+            $value = $arr[0] . '_' . $arr[1];
+            $this->silence = $arr[2] == '1';
+        } else {
+            $value = implode('_', $arr);
+        }
         if ($value == '1_3137863935') {
             $this->toggleMainLight();
         }
@@ -98,13 +106,17 @@ class Scenario_Bedroom extends Dobby_Scenario {
                 preg_match_all('/([\d]+)/', $value, $matches);
                 $matches = $matches[0];
                 $vals = implode(':', $matches);
-                $this->device('BedroomLeds')->setValue('1:' . $vals);
+                if (!$this->silence) {
+                    $this->device('BedroomLeds')->setValue('1:' . $vals);
+                }
                 $this->set('center_color', $value);
             } else {
                 preg_match_all('/([\d]+)/', $params['center_color'], $matches);
                 $matches = $matches[0];
                 $value = implode(':', $matches);
-                $this->device('BedroomLeds')->setValue('1:' . $value);
+                if (!$this->silence) {
+                    $this->device('BedroomLeds')->setValue('1:' . $value);
+                }
                 $this->set('center_color', $params['center_color']);
             }
         }
@@ -112,7 +124,9 @@ class Scenario_Bedroom extends Dobby_Scenario {
             preg_match_all('/([\d]+)/', $params['border_color'], $matches);
             $matches = $matches[0];
             $value = implode(':', $matches);
-            $this->device('BedroomLeds')->setValue('2:' . $value);
+            if (!$this->silence) {
+                $this->device('BedroomLeds')->setValue('2:' . $value);
+            }
             $this->set('border_color', $params['border_color']);
         }
         if ($params['enable_main_light'] != -1) {
@@ -140,7 +154,9 @@ class Scenario_Bedroom extends Dobby_Scenario {
     }
 
     protected function setWindowLight($enable) {
-        $this->device('BedroomLights')->setValue('2:' . $enable);
+        if (!$this->silence) {
+            $this->device('BedroomLights')->setValue('2:' . $enable);
+        }
         $this->set('enable_window_light', $enable);
         $this->saveData();
     }
@@ -153,7 +169,9 @@ class Scenario_Bedroom extends Dobby_Scenario {
     }
 
     protected function setMainLight($enable) {
-        $this->device('BedroomLights')->setValue('1:' . $enable);
+        if (!$this->silence) {
+            $this->device('BedroomLights')->setValue('1:' . $enable);
+        }
         $this->set('enable_main_light', $enable);
         $this->saveData();
     }
