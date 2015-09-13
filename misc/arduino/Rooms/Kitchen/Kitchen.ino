@@ -9,16 +9,18 @@
 #include <Ethernet.h>
 
 // Ethernet Configuration
-byte mac[] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x16 };
-IPAddress ip(192,168,1,16);
+byte mac[] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xA6 };
+IPAddress ip(192,168,1,116);
 EthernetServer server(80);
 EthernetClient client;
 
-byte SERVER[] = { 192, 168, 1, 4 };
+byte SERVER[] = { 192, 168, 1, 2 };
 EthernetClient client_get;
 
-#define REQUESTSIZE 30
+#define REQUESTSIZE 200
 
+#define IRCOMMANDSSIZE 20
+String IRCOMMANDS[IRCOMMANDSSIZE]; 
 
 #define PARAMSSIZE 8
 char PARAMS[PARAMSSIZE][10];  
@@ -67,8 +69,13 @@ byte LED2SMOOTH = 0;
 byte MOTIONVALUE = 0;
 int MOTIONTIME = 0;
 int MOTIONDELAY = 1000;
-int SENDTIME = 0;
-int SENDDELAY = 5000;
+long SENDTIME = 0;
+long SENDDELAY = 5000;
+long MINSENDDELAY = 5000;
+long MAXSENDDELAY = 200000;
+
+long IRGETDELAY = 200000;
+long IRSENDTIME = 0;
 
 int LIGHTVALUE = -1;
 int LIGHTTIME = 0;
@@ -116,8 +123,6 @@ void setup(void) {
 
 void act(){
   
-  
-
   
   // METHOD - name of method
   // PARAMS - array of params
@@ -207,7 +212,7 @@ void act(){
   } 
   
   client.println("Kitchen Arduino");
-  client.println("Version 1.3.1");
+  client.println("Version 2.0");
   client.print("MOTION = ");
   client.println(MOTIONVALUE);
   client.print("LIGHT = ");
@@ -261,8 +266,7 @@ void loop(void) {
      if (( TEMPVALUE<100 && abs(TEMPVALUE - LIGHTVALUE)>30) || ( TEMPVALUE>=100 && abs(TEMPVALUE - LIGHTVALUE)>50)) {  
         sprintf(buf, "%sdevice[]=%s&value[]=%i&", buf, "light",(int)TEMPVALUE); 
            isclearbuf = 0;   
-           Serial.print("light= ");
-           Serial.println(TEMPVALUE);
+        
         
         LIGHTVALUE = TEMPVALUE;
      }
@@ -320,9 +324,48 @@ void loop(void) {
   if(client){
            
      char request[REQUESTSIZE];
+
+     getServerResponse(request, client);
+     
+     sendHeaders(client);       
+       bool again = false;
+       bool res = true;
+       while (res){   
+         res = parseRequest(request, again);
+         Serial.print("res ");
+         Serial.println(res);
+         again = true;
+         act();       
+       }
+
+    
+    delay(1);
+    client.stop();
+  }
+  LIGHTTIME++;
+  SENDTIME++;
+  IRSENDTIME++;
+  if (SENDTIME >= SENDDELAY) {
+    SENDTIME = 0;
+    sendToServer();  
+  }
+
+
+if (IRSENDTIME >= IRGETDELAY) {
+    IRSENDTIME = 0;
+    getIRCommand();  
+  }
+
+}
+
+
+void getServerResponse(char* request , EthernetClient client){
+
+    
      byte reqInd = 0;
      boolean currentLineIsBlank = true;
-     while (client.connected()) {
+
+ while (client.connected()) {
 
      if (client.available()) {
         char c = client.read();        
@@ -330,10 +373,8 @@ void loop(void) {
     
            char* cbuf =getRequest(request);
            strcpy(request,cbuf);
-           sendHeaders(client);          
-           parseRequest(request);          
-           act();       
-                      
+           sendHeaders(client);       
+      
           break;
         }
         if (c == '\n') {
@@ -350,17 +391,36 @@ void loop(void) {
         }
       }
     }
-    delay(1);
-    client.stop();
-  }
-  LIGHTTIME++;
-  SENDTIME++;
-  if (SENDTIME >= SENDDELAY) {
-    SENDTIME = 0;
-    sendToServer();  
-  }
 }
 
+
+
+void getIRCommand() {
+
+    int res = 1;
+    client_get.stop();        
+    res = client_get.connect(SERVER, 80);
+    Serial.println("getIRCommand");
+    if (res){
+      Serial.println("Success connection");
+    } else {
+      Serial.println("Fail connection");  
+    }
+          
+    if (res){
+     client_get.print("GET /ajax/ircommand");    
+     client_get.println(" HTTP/1.1");
+     client_get.println("Host: 192.168.1.2");
+     client_get.println("Connection: keep-alive");
+     client_get.println("Keep-Alive: timeout=30, max=100");
+     client_get.println("User-Agent: arduino-ethernet");
+     client_get.println("Content-Type: text/html\n");
+     delay(500);
+     char request[REQUESTSIZE];
+     getServerResponse(request, client);
+     Serial.println(request);
+    }  
+}
 
 void sendToServer() {
   
@@ -368,12 +428,14 @@ void sendToServer() {
       int res = 1;
          client_get.stop();
         
-        Serial.println("conecting...");
+     //   Serial.println("conecting...");
         res = client_get.connect(SERVER, 80);
         if (res){
           Serial.println("Success connection");
         } else {
-          Serial.println("Fail connection");  
+          Serial.print("Fail connection ");  
+          Serial.println(SENDDELAY);  
+          Serial.println(buf);  
         }
         
       
@@ -393,8 +455,16 @@ void sendToServer() {
      //client_get.stop();
     
      isclearbuf = 1;
-     sprintf(buf, "");   
+     sprintf(buf, "");
      Serial.println("sended");
+     SENDDELAY = MINSENDDELAY;
+    }else {
+     if (sizeof(buf)> 100){
+        sprintf(buf, "");
+     }
+     if (SENDDELAY < MAXSENDDELAY){
+      SENDDELAY += 2000;
+     }
     }
   }
 }
@@ -409,7 +479,7 @@ void sendHeaders(EthernetClient client){
 
 char *getRequest(char *request) {
 
-Serial.println(request);
+
   request = strstr(request,"/");    
   request = strtok (request," ");  
   request = request + 1;
@@ -417,14 +487,21 @@ Serial.println(request);
 }
 
 
-void parseRequest(char *request){
+bool parseRequest(char *request, bool again){
   strcpy(request , request);
-  char *pos= strtok(request,":");
+   char *pos;
+  if (again) {
+   pos= strtok(NULL, ":");
+  }else {
+   pos= strtok(request, ":");
+  }
    if (!pos){
      strcpy(METHOD , request);
    }else {
      strcpy(METHOD , pos);
    }
+     Serial.print("METHOD ");
+       Serial.println(METHOD);
    
    for (int i=0; i<PARAMSSIZE; i++){
      memset(PARAMS[i], 0, sizeof PARAMS[i]);
@@ -436,9 +513,14 @@ void parseRequest(char *request){
   
    if (pos!=NULL){
      while (pos!=NULL){
-       strcpy(PARAMS[ind] , pos);       
-       pos = strtok(NULL,":");          
+       if (strcmp(pos,"%7C") == 0){
+           return true;      
+       }
+       strcpy(PARAMS[ind] , pos);    
+       pos = strtok(NULL,":"); 
+      
        ind++;
      }
    }
+   return false;
 }
