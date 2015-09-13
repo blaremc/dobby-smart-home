@@ -32,10 +32,25 @@ int iteration;
 #define LED1GREENPIN 3
 #define LED1BLUEPIN 4
 
+#define LED2REDPIN 5
+#define LED2GREENPIN 6
+#define LED2BLUEPIN 7
+
+#define LED3REDPIN 8
+#define LED3GREENPIN 9
+#define LED3BLUEPIN 10
+
+#define LED4REDPIN 11
+#define LED4GREENPIN 12
+#define LED4BLUEPIN 13
+
+#define LED5REDPIN 44
+#define LED5GREENPIN 45
+#define LED5BLUEPIN 46
+
 byte LED1REDTARGET = 0;
 byte LED1GREENTARGET = 0;
 byte LED1BLUETARGET = 0;
-
 byte LED1REDVALUE = 0;
 byte LED1GREENVALUE = 0;
 byte LED1BLUEVALUE = 0;
@@ -44,19 +59,35 @@ byte LED1SMOOTH = 0;
 byte LED2REDTARGET = 0;
 byte LED2GREENTARGET = 0;
 byte LED2BLUETARGET = 0;
-
 byte LED2REDVALUE = 0;
 byte LED2GREENVALUE = 0;
 byte LED2BLUEVALUE = 0;
 byte LED2SMOOTH = 0;
 
+byte LED3REDTARGET = 0;
+byte LED3GREENTARGET = 0;
+byte LED3BLUETARGET = 0;
+byte LED3REDVALUE = 0;
+byte LED3GREENVALUE = 0;
+byte LED3BLUEVALUE = 0;
+byte LED3SMOOTH = 0;
+
+byte LED4REDTARGET = 0;
+byte LED4GREENTARGET = 0;
+byte LED4BLUETARGET = 0;
+byte LED4REDVALUE = 0;
+byte LED4GREENVALUE = 0;
+byte LED4BLUEVALUE = 0;
+byte LED4SMOOTH = 0;
 
 
-#define LED2REDPIN 5
-#define LED2GREENPIN 6
-#define LED2BLUEPIN 7
-
-
+byte LED5REDTARGET = 0;
+byte LED5GREENTARGET = 0;
+byte LED5BLUETARGET = 0;
+byte LED5REDVALUE = 0;
+byte LED5GREENVALUE = 0;
+byte LED5BLUEVALUE = 0;
+byte LED5SMOOTH = 0;
 
 
 #define LIGHTPIN A1 // сенсор света
@@ -75,20 +106,16 @@ unsigned long codeValue; // The code value if not raw
 
 IRsend irsend;
 
-
-
-
-
 byte MOTIONVALUE = 0;
 int MOTIONTIME = 0;
 int MOTIONDELAY = 1000;
 long SENDTIME = 0;
 long SENDDELAY = 5000;
 long MINSENDDELAY = 5000;
-long MAXSENDDELAY = 200000;
+long MAXSENDDELAY = 2000000;
 
 long IRGETDELAY = 200000;
-long IRSENDTIME = 200000;
+long IRSENDTIME = 20000;
 
 int LIGHTVALUE = -1;
 int LIGHTTIME = 0;
@@ -115,9 +142,23 @@ void setup(void) {
   pinMode(LED1REDPIN, OUTPUT);
   pinMode(LED1GREENPIN, OUTPUT);
   pinMode(LED1BLUEPIN, OUTPUT);
+  
   pinMode(LED2REDPIN, OUTPUT);
   pinMode(LED2GREENPIN, OUTPUT);
   pinMode(LED2BLUEPIN, OUTPUT);
+
+  pinMode(LED3REDPIN, OUTPUT);
+  pinMode(LED3GREENPIN, OUTPUT);
+  pinMode(LED3BLUEPIN, OUTPUT);
+  
+  pinMode(LED4REDPIN, OUTPUT);
+  pinMode(LED4GREENPIN, OUTPUT);
+  pinMode(LED4BLUEPIN, OUTPUT);
+  
+  pinMode(LED5REDPIN, OUTPUT);
+  pinMode(LED5GREENPIN, OUTPUT);
+  pinMode(LED5BLUEPIN, OUTPUT);
+  
   irrecv.enableIRIn();
   pinMode(LIGHTPIN, OUTPUT);
   pinMode(MOTIONPIN, INPUT);
@@ -231,7 +272,7 @@ void act(){
       }
     
     }
-     if (atoi(PARAMS[0]) == 2){
+    if (atoi(PARAMS[0]) == 2){
         LED2REDTARGET = atoi(PARAMS[1]);
         LED2GREENTARGET = atoi(PARAMS[2]);
         LED2BLUETARGET = atoi(PARAMS[3]);
@@ -239,6 +280,39 @@ void act(){
         LED2SMOOTH = atoi(PARAMS[4]);
         if (LED2SMOOTH==0){
          LED2SMOOTH = 1; 
+        } 
+    }
+
+    if (atoi(PARAMS[0]) == 3){
+        LED3REDTARGET = atoi(PARAMS[1]);
+        LED3GREENTARGET = atoi(PARAMS[2]);
+        LED3BLUETARGET = atoi(PARAMS[3]);
+      
+        LED3SMOOTH = atoi(PARAMS[4]);
+        if (LED3SMOOTH==0){
+         LED3SMOOTH = 1; 
+        } 
+    }
+
+    if (atoi(PARAMS[0]) == 4){
+        LED4REDTARGET = atoi(PARAMS[1]);
+        LED4GREENTARGET = atoi(PARAMS[2]);
+        LED4BLUETARGET = atoi(PARAMS[3]);
+      
+        LED4SMOOTH = atoi(PARAMS[4]);
+        if (LED4SMOOTH==0){
+         LED4SMOOTH = 1; 
+        } 
+    }
+
+    if (atoi(PARAMS[0]) == 5){
+        LED5REDTARGET = atoi(PARAMS[1]);
+        LED5GREENTARGET = atoi(PARAMS[2]);
+        LED5BLUETARGET = atoi(PARAMS[3]);
+      
+        LED5SMOOTH = atoi(PARAMS[4]);
+        if (LED5SMOOTH==0){
+         LED5SMOOTH = 1; 
         } 
     }
     return;
@@ -365,14 +439,17 @@ void loop(void) {
       }
     }
   }
-        
-  if(client){ 
+
+
+       
+  if(client){    
     String result = getServerResponse(client);
-    result = result.substring(result.indexOf("GET /") + 5, result.indexOf(" ", 5));         
-    doCommands(result); 
     sendHeaders(client); 
     delay(1);
     client.stop();
+    result = result.substring(result.indexOf("GET /") + 5, result.indexOf(" ", 5));         
+    doCommands(result); 
+   
   }
   LIGHTTIME++;
   SENDTIME++;
@@ -401,10 +478,10 @@ void doCommands(String commands){
    Serial.print("COMMAND = ");
    Serial.println(METHOD);
    for (int i=0; i<10; i++){
-   Serial.print("PARAMS[");
-   Serial.print(i);
-   Serial.print("] = ");
-   Serial.println(PARAMS[i]);
+     Serial.print("PARAMS[");
+     Serial.print(i);
+     Serial.print("] = ");
+     Serial.println(PARAMS[i]);
     
    }
    act();       
@@ -417,15 +494,16 @@ String getServerResponse(EthernetClient client){
   byte reqInd = 0;
   boolean currentLineIsBlank = true;
   String req = String("");
-  
   while (client.connected()) {
   
      if (client.available()) {
-        char c = client.read();        
+        char c = client.read();     
+        Serial.print(c);   
         req += c;        
       }
+     
   }
-  
+  Serial.print("not connected");
   Serial.print("String ");
   Serial.println(req);
   return req;
@@ -444,8 +522,7 @@ void getIRCommand() {
     }
           
     if (res){
-     client_get.print("GET /ajax/ircommand");    
-     client_get.println(" HTTP/1.1");
+     client_get.println("GET /ajax/ircommand HTTP/1.1");
      client_get.println("Host: 192.168.1.4");
      client_get.println("User-Agent: arduino-ethernet");
      client_get.println("Connection: close");
@@ -471,50 +548,26 @@ void getIRCommand() {
       IRACTIONS[j] = "";
     }
      
-    }  
+  }  
 }
-void sentValueToServer(){
 
-    client_get.stop();    
-    Serial.println("connecting...");
-    int ret = client_get.connect(SERVER, 80);    
-  if (ret) {
-    Serial.println("connected");
-    // Make a HTTP request:
-   client_get.print(buf);
-   client_get.println(" HTTP/1.0");
-   client_get.println("Host: 192.168.1.4");
-   client_get.println(ipbuff); // ip адрес нашего контроллера в текстовом виде
-   client_get.print("Content-Type: text/html\n");
-   client_get.println("Connection: close\n");
-   delay(2000);
-   client_get.stop();
-  }
-  else {
-    // kf you didn't get a connection to the server:
-    Serial.println("connection failed");
-    Serial.print("Error: ");
-    Serial.println(ret);
-    Serial.println(client_get.status());
-  }
-}
 
 void sendToServer() {
   
   if (!isclearbuf){    
-      int res = 1;
-         client_get.stop();
-        
-     //   Serial.println("conecting...");
-        res = client_get.connect(SERVER, 80);
-        if (res){
-          Serial.println("Success connection");
-        } else {
-          Serial.print("Fail connection ");  
-          Serial.println(SENDDELAY);  
-          Serial.println(buf);  
-        }
-        
+    int res = 1;
+       client_get.stop();
+      
+   //   Serial.println("conecting...");
+      res = client_get.connect(SERVER, 80);
+      if (res){
+        Serial.println("Success connection");
+      } else {
+        Serial.print("Fail connection ");  
+        Serial.println(SENDDELAY);  
+        Serial.println(buf);  
+      }
+      
       
     if (res){
      Serial.print("GET /ajax/events/?");
@@ -550,19 +603,17 @@ void sendHeaders(EthernetClient client){
      // send a standard http response header
     client.println("HTTP/1.1 200 OK");
     client.println("Content-Type: text/plain");
-    client.println("Connection: close");  // the connection will be closed after completion of the response
+    client.println("User-Agent: arduino-ethernet");
+    client.println("Connection: close"); // the connection will be closed after completion of the response
     client.println();
 }
 
 char *getRequest(char *request) {
-
-
   request = strstr(request,"/");    
   request = strtok (request," ");  
   request = request + 1;
   return request;
 }
-
 
 bool parseRequest(char *request, bool again){
   strcpy(request , request);
@@ -580,7 +631,6 @@ bool parseRequest(char *request, bool again){
    
    for (int i=0; i<PARAMSSIZE; i++){
      memset(PARAMS[i], 0, sizeof PARAMS[i]);
-
    }   
    int ind = 0;
   
@@ -592,10 +642,8 @@ bool parseRequest(char *request, bool again){
            return true;      
        }
        strcpy(PARAMS[ind] , pos);
-   
        pos = strtok(NULL,":");       
        ind++;
-     
      }
    }
    return false;
