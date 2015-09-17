@@ -136,8 +136,15 @@ namespace Multiroom
         {
             // playback duration 
             double time = Bass.BASS_ChannelBytes2Seconds(_stream, Bass.BASS_ChannelGetPosition(_stream));
-            return Math.Round(time,2);
+            return Math.Round(time, 2);
         }
+
+
+        public void setCurrentPosition(double position)
+        {
+            Bass.BASS_ChannelSetPosition(_stream, position);
+        }
+
 
         public bool removeChannels(string[] channels)
         {
@@ -373,9 +380,7 @@ namespace Multiroom
             for (int i = 0; i < playlists.Count; i++)
             {
                 playlists[i].stopChannels(channels);
-
             }
-
         }
 
         public static Playlist CreatePlaylist(string[] files, string[] channels)
@@ -488,6 +493,11 @@ namespace Multiroom
             Player.setVolumeChannels(playinfo_channels, 1f);
            // Thread.Sleep(1000);
           
+        }
+
+        public static void SetPosition(double position, int channel)
+        {
+
         }
     }
 }

@@ -49,6 +49,12 @@
 .multiroom-room .controls .next {
     background-image: url("../img/multiroom_fast_forward.png");
 }
+.multiroom-room .controls .turn-up {
+    background-image: url("../img/multiroom_volume_up.png");
+}
+.multiroom-room .controls .turn-down {
+    background-image: url("../img/multiroom_volume_down.png");
+}
 .multiroom-room .controls a {
     background-color: #EDB579;
     background-repeat: no-repeat;
@@ -62,4 +68,36 @@
 
 .multiroom-room .controls a:hover {
     background-color: #89D62B;
+}
+
+.multiroom-room .tracker {
+    height: 15px;
+    background: #888;
+    position: relative;
+    margin: 20px 0 30px;
+    cursor: pointer;
+}
+.multiroom-room .tracker .full {
+    background: #000080;
+    height: 15px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    /*transition-property: width;*/
+    /*transition-duration: 1s;*/
+    /*transition-timing-function: linear;*/
+    cursor: pointer;
+}
+.multiroom-room .tracker .duration {
+    position: absolute;
+    right: 0;
+    top: 20px;
+    font-size: 11px;
+}
+
+.multiroom-room .tracker .position {
+    position: absolute;
+    left: 0;
+    top: 20px;
+    font-size: 11px;
 }

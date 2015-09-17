@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Web;
 using System.Configuration;
 using System.Speech.Synthesis;
 using System.Speech.AudioFormat;
 using Newtonsoft.Json;
+using System.Globalization;
 
 namespace Multiroom
 {
@@ -18,10 +19,11 @@ namespace Multiroom
         private static Multiroom _instance;
 
         public Multiroom()
-        {
-
+        { 
+            CultureInfo.DefaultThreadCurrentCulture = new System.Globalization.CultureInfo("en-US");
             Player.init();
 
+            
             Database.instance().connect(ConfigurationSettings.AppSettings["mysql"]);
 
             Multiroom.addLog("Init mysql");
@@ -78,6 +80,8 @@ namespace Multiroom
                         return Say(HttpUtility.ParseQueryString(message).Get("text"), HttpUtility.ParseQueryString(message).Get("channels"));
                     case "getplaylists":
                         return GetPlayLists();
+                    case "position":
+                        return SetPosition(HttpUtility.ParseQueryString(message).Get("position"), HttpUtility.ParseQueryString(message).Get("playlist"));
                 }
             }
             catch (Exception ex)
@@ -196,6 +200,15 @@ namespace Multiroom
             string json = JsonConvert.SerializeObject(res);
 
             return json;
+        }
+
+
+        public string SetPosition(string position, string playlist)
+        {
+            Playlist pl = Player.getPlaylist(playlist);
+            double time = pl.getCurrentDuration();
+            pl.setCurrentPosition(time*Convert.ToDouble(position)/100);
+            return "OK";
         }
 
 
