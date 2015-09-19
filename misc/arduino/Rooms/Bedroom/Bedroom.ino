@@ -138,6 +138,7 @@ byte isclearbuf = 1;
 void setup(void) {
   Ethernet.begin(mac, ip);
   server.begin();
+  
   Serial.begin(9600); 
   pinMode(LED1REDPIN, OUTPUT);
   pinMode(LED1GREENPIN, OUTPUT);
@@ -166,17 +167,21 @@ void setup(void) {
   pinMode(RELE2PIN, OUTPUT);
   digitalWrite(RELE1PIN, LOW); 
   digitalWrite(RELE2PIN, LOW); 
-
+  
+  Serial.print("server is at ");
+  Serial.println(Ethernet.localIP());
+  
   int res = client_get.connect(SERVER, 80);
   if (res){
     Serial.println("Success connection");
   } else {
     Serial.println("Fail connection");  
   }
+
+  
 }
 
 void act(){
-  
   
   // METHOD - name of method
   // PARAMS - array of params
@@ -204,10 +209,10 @@ void act(){
     if (atoi(PARAMS[0])==2){      
        if (strcmp(PARAMS[1],"t")==0 ){ 
         if (RELE2VALUE){
-          digitalWrite(RELE1PIN, HIGH); 
+          digitalWrite(RELE2PIN, HIGH); 
           RELE2VALUE = 0;
         }else {
-          digitalWrite(RELE1PIN, LOW); 
+          digitalWrite(RELE2PIN, LOW); 
           RELE2VALUE = 1;
         } 
       } else  if (atoi(PARAMS[1])==0){
@@ -317,13 +322,16 @@ void act(){
     }
     return;
   } 
-  
   client.println("Bedroom Arduino");
   client.println("Version 2.0");
   client.print("MOTION = ");
   client.println(MOTIONVALUE);
   client.print("LIGHT = ");
   client.println(LIGHTVALUE);
+  client.print("RELE1VALUE = ");
+  client.println(RELE1VALUE);
+  client.print("RELE2VALUE = ");
+  client.println(RELE2VALUE);
   client.print("String = ");
   client.println(buf);
 }
@@ -408,17 +416,6 @@ void loop(void) {
          LED1BLUETARGET > LED1BLUEVALUE? LED1BLUEVALUE++ : LED1BLUEVALUE--;
          analogWrite(LED1BLUEPIN, LED1BLUEVALUE);       
       }
-
-      if (LED1REDVALUE ==0 && LED1GREENVALUE ==0 && LED1BLUEVALUE==0){
-        digitalWrite(RELE2PIN, HIGH);          
-      } else {      
-        digitalWrite(RELE2PIN, LOW);     
-      }
-       if (LED1REDVALUE ==255 || LED1GREENVALUE ==255 || LED1BLUEVALUE==255){
-        digitalWrite(RELE1PIN, LOW);     
-       }else {
-        digitalWrite(RELE1PIN, HIGH);             
-       }
     }
   }
   
@@ -440,15 +437,65 @@ void loop(void) {
     }
   }
 
-
-       
+  if (LED3REDTARGET != LED3REDVALUE || LED3GREENTARGET != LED3GREENVALUE || LED3BLUETARGET != LED3BLUEVALUE){
+    
+    if (iteration % LED3SMOOTH == 0){
+      if (LED3REDTARGET != LED3REDVALUE){   
+         LED3REDTARGET > LED3REDVALUE? LED3REDVALUE++ : LED3REDVALUE--;
+         analogWrite(LED3REDPIN, LED3REDVALUE);
+      }    
+      if (LED3GREENTARGET != LED3GREENVALUE){   
+         LED3GREENTARGET > LED3GREENVALUE? LED3GREENVALUE++ : LED3GREENVALUE--;
+         analogWrite(LED3GREENPIN, LED3GREENVALUE);
+      }
+      if (LED3BLUETARGET != LED3BLUEVALUE){   
+         LED3BLUETARGET > LED3BLUEVALUE? LED3BLUEVALUE++ : LED3BLUEVALUE--;
+         analogWrite(LED3BLUEPIN, LED3BLUEVALUE);       
+      }
+    }
+  }
+    
+    if (LED4REDTARGET != LED4REDVALUE || LED4GREENTARGET != LED4GREENVALUE || LED4BLUETARGET != LED4BLUEVALUE){
+    
+    if (iteration % LED4SMOOTH == 0){
+      if (LED4REDTARGET != LED4REDVALUE){   
+         LED4REDTARGET > LED4REDVALUE? LED4REDVALUE++ : LED4REDVALUE--;
+         analogWrite(LED4REDPIN, LED4REDVALUE);
+      }    
+      if (LED4GREENTARGET != LED4GREENVALUE){   
+         LED4GREENTARGET > LED4GREENVALUE? LED4GREENVALUE++ : LED4GREENVALUE--;
+         analogWrite(LED4GREENPIN, LED4GREENVALUE);
+      }
+      if (LED4BLUETARGET != LED4BLUEVALUE){   
+         LED4BLUETARGET > LED4BLUEVALUE? LED4BLUEVALUE++ : LED4BLUEVALUE--;
+         analogWrite(LED4BLUEPIN, LED4BLUEVALUE);       
+      }
+    }
+  }
+ if (LED5REDTARGET != LED5REDVALUE || LED5GREENTARGET != LED5GREENVALUE || LED5BLUETARGET != LED5BLUEVALUE){
+    
+    if (iteration % LED5SMOOTH == 0){
+      if (LED5REDTARGET != LED5REDVALUE){   
+         LED5REDTARGET > LED5REDVALUE? LED5REDVALUE++ : LED5REDVALUE--;
+         analogWrite(LED5REDPIN, LED5REDVALUE);
+      }    
+      if (LED5GREENTARGET != LED5GREENVALUE){   
+         LED5GREENTARGET > LED5GREENVALUE? LED5GREENVALUE++ : LED5GREENVALUE--;
+         analogWrite(LED5GREENPIN, LED5GREENVALUE);
+      }
+      if (LED5BLUETARGET != LED5BLUEVALUE){   
+         LED5BLUETARGET > LED5BLUEVALUE? LED5BLUEVALUE++ : LED5BLUEVALUE--;
+         analogWrite(LED5BLUEPIN, LED5BLUEVALUE);       
+      }
+    }
+  }
   if(client){    
-    String result = getServerResponse(client);
+    String result = getServerHeader(client);
     sendHeaders(client); 
-    delay(1);
-    client.stop();
     result = result.substring(result.indexOf("GET /") + 5, result.indexOf(" ", 5));         
     doCommands(result); 
+    delay(1);
+    client.stop();
    
   }
   LIGHTTIME++;
@@ -489,25 +536,46 @@ void doCommands(String commands){
   
 }
 
-String getServerResponse(EthernetClient client){
+String getServerHeader(EthernetClient client){
     
   byte reqInd = 0;
   boolean currentLineIsBlank = true;
   String req = String("");
   while (client.connected()) {
-  
      if (client.available()) {
-        char c = client.read();     
-        Serial.print(c);   
+        char c = client.read();
         req += c;        
+        if (c == '\n' && currentLineIsBlank) {
+          break;
+       }
+       if (c == '\n') {
+          // you're starting a new line
+          currentLineIsBlank = true;
+        }
+        else if (c != '\r') {
+          // you've gotten a character on the current line
+          currentLineIsBlank = false;
+        }
       }
-     
   }
-  Serial.print("not connected");
-  Serial.print("String ");
-  Serial.println(req);
   return req;
 }
+
+String getServerBody(EthernetClient client){
+    
+  byte reqInd = 0;
+  boolean currentLineIsBlank = true;
+  String req = String("");
+  while (client.connected()) {
+     if (client.available()) {
+        char c = client.read();   
+        req += c;    
+      }
+  }
+  return req;
+}
+
+
 
 void getIRCommand() {
 
@@ -528,8 +596,11 @@ void getIRCommand() {
      client_get.println("Connection: close");
      client_get.println();
      //delay(1500);
-     String result = getServerResponse(client_get);
-     result = result.substring(result.indexOf("\r\n\r\n") + 4);
+     getServerHeader(client_get);
+     String result = getServerBody(client_get);
+     Serial.print("result = ");
+     Serial.println(result);
+    // result = result.substring(result.indexOf("\r\n\r\n") + 4);
     
     int i = 0;
     int ind = 0;
