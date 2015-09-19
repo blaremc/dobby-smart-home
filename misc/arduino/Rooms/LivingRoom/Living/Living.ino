@@ -36,9 +36,9 @@ int iteration;
 #define LED2GREENPIN 6
 #define LED2BLUEPIN 7
 
-#define LED3REDPIN 8
-#define LED3GREENPIN 9
-#define LED3BLUEPIN 10
+#define LED3REDPIN 11
+#define LED3GREENPIN 12
+#define LED3BLUEPIN 13
 
 #define LED4REDPIN 11
 #define LED4GREENPIN 12
@@ -119,7 +119,7 @@ int MOTIONDELAY2 = 1000;
 
 long SENDTIME = 0;
 long SENDDELAY = 5000;
-long MINSENDDELAY = 5000;
+long MINSENDDELAY = 7000;
 long MAXSENDDELAY = 2000000;
 
 long IRGETDELAY = 200000;
@@ -127,11 +127,11 @@ long IRSENDTIME = 20000;
 
 int LIGHTVALUE = -1;
 int LIGHTTIME = 0;
-int LIGHTDELAY = 1000;
+int LIGHTDELAY = 2000;
 
 int LIGHTVALUE2 = -1;
 int LIGHTTIME2 = 0;
-int LIGHTDELAY2 = 1000;
+int LIGHTDELAY2 = 2000;
 
 int TEMPERATUREVALUE = 0;
 int HUMIDITYVALUE = 0;
@@ -457,8 +457,7 @@ void loop(void) {
     // ИК приемник
   if (irrecv.decode(&results)) // Если данные пришли 
   {
-    
- 
+   
     storeCode(&results, "ir");
     irrecv.resume(); // Принимаем следующую команду
   }
@@ -583,27 +582,34 @@ void loop(void) {
     IRSENDTIME = 0;
     getIRCommand();  
   }
+  if (SENDTIME % 1000 == 0){
+  Serial.print(".");
+  }
 }
 
 void doCommands(String commands){
-//  Serial.print("doCommands ");
-//  Serial.println(commands);
+  
+  Serial.print("doCommands ");
+  Serial.println(commands);
+  
   char request[REQUESTSIZE];
   commands.toCharArray(request, commands.length() + 1);
   bool again = false;
   bool res = true;
+  
   while (res){   
    res = parseRequest(request, again);
    again = true;
- //  Serial.print("COMMAND = ");
-//   Serial.println(METHOD);
-   for (int i=0; i<10; i++){
- //    Serial.print("PARAMS[");
- //    Serial.print(i);
-//     Serial.print("] = ");
-//Serial.println(PARAMS[i]);
+   Serial.print("COMMAND = ");
+   Serial.println(METHOD);
+   //for (int i=0; i<10; i++){
+    //Serial.print("PARAMS[");
+     //Serial.print(i);
+     //Serial.print("] = ");
+     //Serial.println(PARAMS[i]);
     
-   }
+   //}
+   
    act();       
  }
   
@@ -614,6 +620,8 @@ String getServerHeader(EthernetClient client){
   byte reqInd = 0;
   boolean currentLineIsBlank = true;
   String req = String("");
+  int connectLoop = 0;
+
   while (client.connected()) {
      if (client.available()) {
         char c = client.read();
@@ -630,6 +638,16 @@ String getServerHeader(EthernetClient client){
           currentLineIsBlank = false;
         }
       }
+      connectLoop++;
+    if(connectLoop > 10000)
+    {
+
+      Serial.println();
+      Serial.println(F("Timeout"));
+      client.stop();
+    }
+    //delay(1);
+
   }
   return req;
 }
@@ -639,11 +657,23 @@ String getServerBody(EthernetClient client){
   byte reqInd = 0;
   boolean currentLineIsBlank = true;
   String req = String("");
+  int connectLoop = 0;
+
   while (client.connected()) {
      if (client.available()) {
         char c = client.read();   
         req += c;    
       }
+      if(connectLoop > 10000)
+    {
+      // then close the connection from this end.
+      Serial.println();
+      Serial.println(F("Timeout"));
+      client.stop();
+    }
+    // this is a delay for the connectLoop timing
+   // delay(1);
+
   }
   return req;
 }
@@ -655,11 +685,11 @@ void getIRCommand() {
     int res = 1;
     client_get.stop();        
     res = client_get.connect(SERVER, 80);
-//    Serial.println("getIRCommand");
+    Serial.println("getIRCommand");
     if (res){
-//      Serial.println("Success connection");
+     Serial.println("Success connection");
     } else {
-//      Serial.println("Fail connection");  
+      Serial.println("Fail connection");  
     }
           
     if (res){
@@ -671,8 +701,8 @@ void getIRCommand() {
      //delay(1500);
      getServerHeader(client_get);
      String result = getServerBody(client_get);
-//Serial.print("result = ");
- //    Serial.println(result);
+     Serial.print("result = ");
+     Serial.println(result);
     // result = result.substring(result.indexOf("\r\n\r\n") + 4);
     
     int i = 0;
@@ -680,8 +710,8 @@ void getIRCommand() {
     while (ind != -1 && i<= IRCOMMANDSSIZE){
       IRACTIONS[i] = result.substring(ind, result.indexOf("\n", ind));
       IRACTIONS[i].trim();
- //     Serial.print("IR ");
- //     Serial.println(IRACTIONS[i]);
+      Serial.print("IR ");
+      Serial.println(IRACTIONS[i]);
       ind = result.indexOf("\n", ind);
       if (ind!=-1){
         ind++;
@@ -702,20 +732,20 @@ void sendToServer() {
     int res = 1;
        client_get.stop();
       
-   //   Serial.println("conecting...");
+      Serial.println("conecting...");
       res = client_get.connect(SERVER, 80);
       if (res){
-//Serial.println("Success connection");
+        Serial.println("Success connection");
       } else {
-  //      Serial.print("Fail connection ");  
-  //      Serial.println(SENDDELAY);  
-  //      Serial.println(buf);  
+        Serial.print("Fail connection ");  
+        Serial.println(SENDDELAY);  
+        Serial.println(buf);  
       }
       
       
     if (res){
-  //   Serial.print("GET /ajax/events/?");
- //    Serial.println(buf);
+     Serial.print("GET /ajax/events/?");
+    Serial.println(buf);
       // Make a HTTP request:
      client_get.print("GET /ajax/events/?");    
      client_get.print(buf);
@@ -730,7 +760,7 @@ void sendToServer() {
     
      isclearbuf = 1;
      sprintf(buf, "");
-  //   Serial.println("sended");
+     Serial.println("sended");
      SENDDELAY = MINSENDDELAY;
     }else {
      if (sizeof(buf)> 100){
@@ -798,7 +828,7 @@ void storeCode(decode_results *results, char* device) {
   codeType = results->decode_type;
   int count = results->rawlen;
   if (codeType == UNKNOWN) {
-  //  Serial.println("Received unknown code, saving as raw");
+    Serial.println("Received unknown code, saving as raw");
     codeLen = results->rawlen - 1;
     // To store raw codes:
     // Drop first value (gap)
@@ -808,39 +838,39 @@ void storeCode(decode_results *results, char* device) {
       if (i % 2) {
         // Mark
         rawCodes[i - 1] = results->rawbuf[i]*USECPERTICK - MARK_EXCESS;
-   //     Serial.print(" m");
+        Serial.print(" m");
       } 
       else {
         // Space
         rawCodes[i - 1] = results->rawbuf[i]*USECPERTICK + MARK_EXCESS;
-     //   Serial.print(" s");
+        Serial.print(" s");
       }
-   //   Serial.print(rawCodes[i - 1], DEC);
+      Serial.print(rawCodes[i - 1], DEC);
     }
   
   }
   else {
     if (codeType == NEC) {
-    //  Serial.print("Received NEC: ");
+      Serial.print("Received NEC: ");
       if (results->value == REPEAT) {
         // Don't record a NEC repeat value as that's useless.
-   //     Serial.println("repeat; ignoring.");
+        Serial.println("repeat; ignoring.");
         return;
       }
     } 
     else if (codeType == SONY) {
-     // Serial.print("Received SONY: ");
+      Serial.print("Received SONY: ");
     } 
     else if (codeType == RC5) {
-     // Serial.print("Received RC5: ");
+      Serial.print("Received RC5: ");
     } 
     else if (codeType == RC6) {
-     // Serial.print("Received RC6: ");
+     Serial.print("Received RC6: ");
     } 
     else {
-     // Serial.print("Unexpected codeType ");
-    //  Serial.print(codeType, DEC);
-     // Serial.println("");
+      Serial.print("Unexpected codeType ");
+      Serial.print(codeType, DEC);
+      Serial.println("");
     }
     codeValue = results->value;
     codeLen = results->bits;
