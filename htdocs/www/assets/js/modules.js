@@ -40,10 +40,43 @@ $(function () {
     $(document).on('click', '.js-tracker', function (e) {
 
         var position = (e.offsetX / $('.js-tracker').width()) * 100;
-        $.post('/ajax/multiroom/position', {position: position, playlist: $(e.target).closest('.js-room').data('playlist')});
+        $.post('/ajax/multiroom/position', {
+            position: position,
+            playlist: $(e.target).closest('.js-room').data('playlist')
+        });
 
     });
 
+    $(document).on('click', '.js-volume-container', function (e) {
+
+        var volume = (e.offsetX / $('.js-volume-container').width());
+        $.post('/ajax/multiroom/volume', {volume: volume, playlist: $(e.target).closest('.js-room').data('playlist')});
+
+    });
+    $(document).on('click', '.js-stop', function (e) {
+        e.preventDefault();
+        $.post('/ajax/multiroom/stop', {playlist: $(e.target).closest('.js-room').data('playlist')});
+    });
+
+    $(document).on('click', '.js-play-playlist', function (e) {
+        e.preventDefault();
+        $.post('/ajax/multiroom/play', {playlist: $(e.target).closest('.js-room').data('playlist')});
+    });
+
+
+    $(document).on('click', '.js-pause', function (e) {
+        e.preventDefault();
+        $.post('/ajax/multiroom/pause', {playlist: $(e.target).closest('.js-room').data('playlist')});
+    });
+    $(document).on('click', '.js-prev', function (e) {
+        e.preventDefault();
+        $.post('/ajax/multiroom/prev', {playlist: $(e.target).closest('.js-room').data('playlist')});
+    });
+
+    $(document).on('click', '.js-next', function (e) {
+        e.preventDefault();
+        $.post('/ajax/multiroom/next', {playlist: $(e.target).closest('.js-room').data('playlist')});
+    });
 
     function getPlaylists() {
 
@@ -57,12 +90,21 @@ $(function () {
                         var $channel = $('.js-room-' + channels[j]);
                         if (items[i].Duration != 0) {
                             $channel.find('.js-track').css('width', (items[i].Position / items[i].Duration * 100) + '%');
+                        } else {
+                            $channel.find('.js-track').css('width', 0);
                         }
                         $channel.find('.js-duration').html(items[i].Duration);
                         $channel.find('.js-position').html(items[i].Position);
                         $channel.find('.js-current-song').html(items[i].Current);
                         $channel.find('.js-playlist').html('Плейлист #' + items[i].PlaylistId);
                         $channel.data('playlist', items[i].PlaylistId);
+                        $channel.find('.js-volume').css('width', (items[i].Volume * 100) + '%');
+
+                        if (parseInt(items[i].IsPlaying)) {
+                            $channel.find('.js-play-playlist').removeClass('play').removeClass('js-play-playlist').addClass('pause js-pause');
+                        } else {
+                            $channel.find('.js-pause').removeClass('pause').removeClass('js-pause').addClass('play js-play-playlist');
+                        }
                     }
 
                 }

@@ -101,3 +101,23 @@
     top: 20px;
     font-size: 11px;
 }
+
+.multiroom-room .volume-container {
+    height: 15px;
+    background: #888;
+    position: relative;
+    margin: 20px 0 30px;
+    cursor: pointer;
+    width:200px;
+}
+.multiroom-room .volume-container .volume-full {
+    background: #006600;
+    height: 15px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    /*transition-property: width;*/
+    /*transition-duration: 1s;*/
+    /*transition-timing-function: linear;*/
+    cursor: pointer;
+}

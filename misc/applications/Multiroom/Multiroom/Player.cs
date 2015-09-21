@@ -24,6 +24,14 @@ namespace Multiroom
         {
             bass_sream = stream;
         }
+        public void setVolume (float vol)
+        {
+            volume = vol;
+        }
+        public float getVolume()
+        {
+            return volume;
+        }
     }
 
     struct Song
@@ -47,6 +55,8 @@ namespace Multiroom
 
     class Playlist
     {
+        private SYNCPROC endSyncProc;
+
         const int REPEAT_NONE = 0;
         const int REPEAT_ALL = 1;
         const int REPEAT_SONG = 2;
@@ -57,24 +67,25 @@ namespace Multiroom
         private int _stream;
         private string _current;
         private int _repeat;
-        private bool _shuffle = true;
+        private bool _shuffle = false;
         private string _name;
         private bool _is_playing = false;
 
         public Playlist(string[] files, string[] channels)
         {
             this._channels = channels;
-
+            Random rnd = new Random();
             for (int i = 0; i < files.Length; i++)
             {
                 int ord = i;
                 if (_shuffle)
                 {
                     bool find = true;
-                    Random rnd = new Random();
+                    
                     while (find)
                     {
                         ord = rnd.Next(0, files.Length);
+                        find = false;
                         foreach (KeyValuePair<string, Song> entry in _songs)
                         {
                             if (entry.Value.order == ord)
@@ -83,7 +94,7 @@ namespace Multiroom
                                 break;
                             }
                         }
-                        find = false;
+                        
                     }
                 }
                 else
@@ -92,6 +103,9 @@ namespace Multiroom
                 }
                 this._songs.Add(files[i], new Song(files[i], ord, i));
             }
+
+            endSyncProc = new SYNCPROC(EndOfFile);
+            
         }
         public long getId()
         {
@@ -138,13 +152,13 @@ namespace Multiroom
             double time = Bass.BASS_ChannelBytes2Seconds(_stream, Bass.BASS_ChannelGetPosition(_stream));
             return Math.Round(time, 2);
         }
+       
 
 
         public void setCurrentPosition(double position)
         {
             Bass.BASS_ChannelSetPosition(_stream, position);
         }
-
 
         public bool removeChannels(string[] channels)
         {
@@ -179,6 +193,7 @@ namespace Multiroom
                     if (_channels[i] == channels[j])
                     {
                         Stop();
+                        find = true;
                     }
                 }
             }
@@ -191,6 +206,22 @@ namespace Multiroom
         public bool hasChannels()
         {
             return _channels.Length > 0;
+        }
+
+        public bool hasChannels(string[] channels)
+        {
+            bool find = false;
+            for (int i = 0; i < _channels.Length; i++)
+            {
+                for (int j = 0; j < channels.Length; j++)
+                {
+                    if (_channels[i] == channels[j])
+                    {
+                        Stop();
+                    }
+                }
+            }
+            return find;
         }
 
         public Dictionary<string, Song> getSongs()
@@ -208,17 +239,25 @@ namespace Multiroom
             return _repeat;
         }
 
-        public void Play(string path)
+        public void Play(string path = null)
         {
-            this._current = path;
-            if (_stream == 0) {
+            if (path==null && _stream == 0)
+            {
+                return;
+            }
+            if ((_stream == 0 || _current != path) && path != null) {
                 _stream = Player.Play(path, _channels);
+                
+                Multiroom.addLog("Play");
+                Bass.BASS_ChannelSetSync(_stream, BASSSync.BASS_SYNC_END | BASSSync.BASS_SYNC_MIXTIME,
+                    0, endSyncProc, IntPtr.Zero);
             }
             else
             {
                 // Если это воспроизведение того же файла
                 Player.PlayStream(_stream);
             }
+            this._current = path;
             _is_playing = true;
         }
 
@@ -229,6 +268,12 @@ namespace Multiroom
                 _is_playing = false;
                 Player.PauseStream(_stream);
             }
+        }
+
+        private void EndOfFile(int syncHandle, int channel, int data, IntPtr user)
+        {
+            Multiroom.addLog("=EndOfFile=");
+            Next();
         }
 
         public void Stop()
@@ -251,7 +296,15 @@ namespace Multiroom
                     return;
                 }
             }
-
+            ord = -1;
+            foreach (KeyValuePair<string, Song> entry in _songs)
+            {
+                if (entry.Value.order == ord + 1)
+                {
+                    this.Play(entry.Key);
+                    return;
+                }
+            }
         }
 
         public void Prev()
@@ -266,6 +319,15 @@ namespace Multiroom
                 }
             }
 
+            ord = _songs.Count - 1;
+            foreach (KeyValuePair<string, Song> entry in _songs)
+            {
+                if (entry.Value.order == ord + 1)
+                {
+                    this.Play(entry.Key);
+                    return;
+                }
+            }
         }
     }
 
@@ -330,9 +392,19 @@ namespace Multiroom
             Bass.BASS_ChannelPlay(stream, false);
         }
 
-        public static void SetVolumeStream(int stream, float value)
+        public static void SetVolumeStream(int stream, float value, int slide = 1000, bool not_save = false)
         {
-            Bass.BASS_ChannelSlideAttribute(stream, BASSAttribute.BASS_ATTRIB_VOL, value, 1000);
+            if (!not_save)
+            {
+                for (int i = 0; i < streams.Count; i++)
+                {
+                    if (streams[i].bass_sream == stream)
+                    {
+                        streams[i].setVolume(value);
+                    }
+                }
+            }
+            Bass.BASS_ChannelSlideAttribute(stream, BASSAttribute.BASS_ATTRIB_VOL, value, slide);
         }
 
 
@@ -363,17 +435,27 @@ namespace Multiroom
             Player.StopStream(streams[Convert.ToInt32(channel)].bass_sream);
         }
 
-        public static void setVolumeChannels(string[] channels, float value)
+        public static void setVolumeChannels(string[] channels, float value, bool not_save = false)
         {
             for (int i = 0; i < channels.Length; i++)
             {
                 if (streams[Convert.ToInt32(channels[i])].bass_sream != 0)
                 {
-                    Player.SetVolumeStream(streams[Convert.ToInt32(channels[i])].bass_sream, value);
+                    Player.SetVolumeStream(streams[Convert.ToInt32(channels[i])].bass_sream, value, 1000, not_save);
                 }
             }
         }
 
+        public static void restoreVolumeChannels(string[] channels)
+        {
+            for (int i = 0; i < channels.Length; i++)
+            {
+                if (streams[Convert.ToInt32(channels[i])].bass_sream != 0)
+                {
+                    Player.SetVolumeStream(streams[Convert.ToInt32(channels[i])].bass_sream, streams[Convert.ToInt32(channels[i])].getVolume());
+                }
+            }
+        }
 
         public static void Stop(string[] channels)
         {
@@ -466,9 +548,9 @@ namespace Multiroom
                 flags = flags | bass_channels[Convert.ToInt32(channels[i])];
             }
             SYNCPROC _mySync = new SYNCPROC(EndPlayInfo);
-            Player.setVolumeChannels(playinfo_channels, 0f);
+            Player.setVolumeChannels(playinfo_channels, 0f, true);
             Thread.Sleep(1000);
-            Player.StopChannels(channels);
+            //Player.StopChannels(channels);
 
             int stream = Bass.BASS_StreamCreateFile(@filename, 0L, 0L, flags);
             if (stream != 0)
@@ -489,9 +571,8 @@ namespace Multiroom
         private static void EndPlayInfo(int handle, int channel, int data, IntPtr user)
         {
             // the 'channel' has ended - jump to the beginning
-            Player.PlayChannels(playinfo_channels);
-            Player.setVolumeChannels(playinfo_channels, 1f);
-           // Thread.Sleep(1000);
+            //Player.PlayChannels(playinfo_channels);
+            Player.restoreVolumeChannels(playinfo_channels);
           
         }
 

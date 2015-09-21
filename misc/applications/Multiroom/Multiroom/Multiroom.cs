@@ -19,17 +19,17 @@ namespace Multiroom
         private static Multiroom _instance;
 
         public Multiroom()
-        { 
+        {
             CultureInfo.DefaultThreadCurrentCulture = new System.Globalization.CultureInfo("en-US");
             Player.init();
 
-            
+
             Database.instance().connect(ConfigurationSettings.AppSettings["mysql"]);
 
             Multiroom.addLog("Init mysql");
-         
+
             Multiroom.addLog("Mysql connected");
-            
+
         }
 
         ~Multiroom()
@@ -59,7 +59,7 @@ namespace Multiroom
         /// <returns></returns>
         public string execute(string message)
         {
-
+            string str;
             string command = HttpUtility.ParseQueryString(message).Get("command");
             try
             {
@@ -71,17 +71,44 @@ namespace Multiroom
                     case "scan":
                         return Scan();
                     case "play":
-                        return Play(HttpUtility.ParseQueryString(message).Get("id"), HttpUtility.ParseQueryString(message).Get("channels"));
+                        str = HttpUtility.ParseQueryString(message).Get("channels");
+                        if (str != null)
+                        {
+                            return Play(HttpUtility.ParseQueryString(message).Get("id"), HttpUtility.ParseQueryString(message).Get("channels"));
+                        }
+                        str = HttpUtility.ParseQueryString(message).Get("playlist");
+                        if (str != null)
+                        {
+                            return PlayPlaylist(str);
+                        }
+                        return "unknown";
                     case "pause":
-                        return Pause(HttpUtility.ParseQueryString(message).Get("id"));
+                        return Pause(HttpUtility.ParseQueryString(message).Get("playlist"));
                     case "stop":
-                        return Stop( HttpUtility.ParseQueryString(message).Get("channels"));
+                        str = HttpUtility.ParseQueryString(message).Get("channels");
+                        if (str != null)
+                        {
+                            return Stop(str);
+                        }
+                         str = HttpUtility.ParseQueryString(message).Get("playlist");
+                        if (str != null)
+                        {
+                            return StopPlaylist(str);
+                        }
+                        return "unknown";
+
                     case "say":
                         return Say(HttpUtility.ParseQueryString(message).Get("text"), HttpUtility.ParseQueryString(message).Get("channels"));
                     case "getplaylists":
                         return GetPlayLists();
                     case "position":
                         return SetPosition(HttpUtility.ParseQueryString(message).Get("position"), HttpUtility.ParseQueryString(message).Get("playlist"));
+                    case "next":
+                        return Next(HttpUtility.ParseQueryString(message).Get("playlist")); 
+                    case "prev":
+                        return Prev(HttpUtility.ParseQueryString(message).Get("playlist")); 
+                    case "setvolume":
+                        return SetVolume(HttpUtility.ParseQueryString(message).Get("volume"), HttpUtility.ParseQueryString(message).Get("channels"));
                 }
             }
             catch (Exception ex)
@@ -101,7 +128,7 @@ namespace Multiroom
         public string Test(string channel)
         {
             string[] channels = new string[] { channel };
-            
+
             Player.PlayInfo("test.wav", channels);
             return "OK";
         }
@@ -153,14 +180,14 @@ namespace Multiroom
         public string Say(string text, string channels)
         {
 
-          
+
             var guid = Guid.NewGuid();
             string[] chs = explode(",", channels);
             Directory.CreateDirectory("speech");
-            string filename = @"speech\"+ guid+".wav";
+            string filename = @"speech\" + guid + ".wav";
             using (SpeechSynthesizer synth = new SpeechSynthesizer())
             {
-                
+
                 // Configure the audio output. 
                 synth.SetOutputToWaveFile(filename);
 
@@ -183,20 +210,21 @@ namespace Multiroom
             List<Playlist> list = Player.getActivePlaylists();
             string result = "";
 
-            List <Dictionary <string, string>> res = new List<Dictionary<string, string>>();
+            List<Dictionary<string, string>> res = new List<Dictionary<string, string>>();
             Dictionary<string, string> dic;
-            for (int i=0; i<list.Count; i++)
+            for (int i = 0; i < list.Count; i++)
             {
                 dic = new Dictionary<string, string>();
                 dic.Add("PlaylistId", list[i].getId().ToString());
                 dic.Add("Channels", string.Join(",", list[i].getChannels().Select(x => x.ToString()).ToArray()));
                 dic.Add("Current", list[i].getCurrentSong());
-                dic.Add("IsPlaying", list[i].isPlaying()?"1":"0");
+                dic.Add("IsPlaying", list[i].isPlaying() ? "1" : "0");
                 dic.Add("Duration", list[i].getCurrentDuration().ToString());
                 dic.Add("Position", list[i].getCurrentPosition().ToString());
+              //  dic.Add("Volume", list[i].getVolume().ToString());
                 res.Add(dic);
             }
-   
+
             string json = JsonConvert.SerializeObject(res);
 
             return json;
@@ -207,7 +235,41 @@ namespace Multiroom
         {
             Playlist pl = Player.getPlaylist(playlist);
             double time = pl.getCurrentDuration();
-            pl.setCurrentPosition(time*Convert.ToDouble(position)/100);
+            pl.setCurrentPosition(time * Convert.ToDouble(position) / 100);
+            return "OK";
+        }
+
+        public string Prev(string playlist)
+        {
+            Playlist pl = Player.getPlaylist(playlist);
+            pl.Prev();
+            return "OK";
+        }
+
+        public string Next(string playlist)
+        {
+            Playlist pl = Player.getPlaylist(playlist);
+            pl.Next();
+            return "OK";
+        }
+
+        public string SetVolume(string volume, string channels)
+        {
+            string[] chs = explode(",", channels);
+            Player.setVolumeChannels(chs, (float)Convert.ToDouble(volume));
+            return "OK";
+        }
+
+        public string StopPlaylist(string playlist)
+        {
+            Playlist pl = Player.getPlaylist(playlist);
+            pl.Stop();
+            return "OK";
+        }
+        public string PlayPlaylist(string playlist)
+        {
+            Playlist pl = Player.getPlaylist(playlist);
+            pl.Play();
             return "OK";
         }
 

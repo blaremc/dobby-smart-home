@@ -151,7 +151,7 @@ namespace Multiroom
 
         public static string[] getFilesFromParentFolder(string id)
         {
-            MySqlCommand command = Database.instance().command("SELECT path FROM files WHERE id_parent=(SELECT id_parent FROM files WHERE id_files=@id)");
+            MySqlCommand command = Database.instance().command("SELECT path FROM files WHERE id_parent=(SELECT id_parent FROM files WHERE id_files=@id) ORDER BY clevel, name");
             command.Prepare();
             command.Parameters.AddWithValue("@id", id);
             MySqlDataReader reader = command.ExecuteReader();
