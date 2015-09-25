@@ -44,15 +44,13 @@ $(function () {
             position: position,
             playlist: $(e.target).closest('.js-room').data('playlist')
         });
-
     });
 
     $(document).on('click', '.js-volume-container', function (e) {
-
         var volume = (e.offsetX / $('.js-volume-container').width());
-        $.post('/ajax/multiroom/volume', {volume: volume, playlist: $(e.target).closest('.js-room').data('playlist')});
-
+        $.post('/ajax/multiroom/volume', {volume: volume, channels: $(e.target).closest('.js-room').data('id')});
     });
+
     $(document).on('click', '.js-stop', function (e) {
         e.preventDefault();
         $.post('/ajax/multiroom/stop', {playlist: $(e.target).closest('.js-room').data('playlist')});
@@ -62,7 +60,6 @@ $(function () {
         e.preventDefault();
         $.post('/ajax/multiroom/play', {playlist: $(e.target).closest('.js-room').data('playlist')});
     });
-
 
     $(document).on('click', '.js-pause', function (e) {
         e.preventDefault();
@@ -81,32 +78,34 @@ $(function () {
     function getPlaylists() {
 
         $.post('/ajax/multiroom/playlists', {}, function (items) {
-            items = $.parseJSON(items);
-            items = $.parseJSON(items);
             if (items) {
-                for (var i = 0; i < items.length; i++) {
-                    var channels = items[i].Channels.split(',');
-                    for (var j = 0; j < channels.length; j++) {
-                        var $channel = $('.js-room-' + channels[j]);
-                        if (items[i].Duration != 0) {
-                            $channel.find('.js-track').css('width', (items[i].Position / items[i].Duration * 100) + '%');
-                        } else {
-                            $channel.find('.js-track').css('width', 0);
-                        }
-                        $channel.find('.js-duration').html(items[i].Duration);
-                        $channel.find('.js-position').html(items[i].Position);
-                        $channel.find('.js-current-song').html(items[i].Current);
-                        $channel.find('.js-playlist').html('Плейлист #' + items[i].PlaylistId);
-                        $channel.data('playlist', items[i].PlaylistId);
-                        $channel.find('.js-volume').css('width', (items[i].Volume * 100) + '%');
+                items = $.parseJSON(items);
+                if (items) {
+                    for (var i = 0; i < items.length; i++) {
+                        var channels = items[i].Channels.split(',');
+                        for (var j = 0; j < channels.length; j++) {
+                            var $channel = $('.js-room-' + channels[j]);
+                            if (items[i].Duration != 0) {
+                                $channel.find('.js-track').css('width', (items[i].Position / items[i].Duration * 100) + '%');
+                            } else {
+                                $channel.find('.js-track').css('width', 0);
+                            }
+                            $channel.find('.js-duration').html(secondsToHms(items[i].Duration));
+                            $channel.find('.js-position').html(secondsToHms(items[i].Position));
+                            var current = items[i].Current.split(/[\\\/]/);
 
-                        if (parseInt(items[i].IsPlaying)) {
-                            $channel.find('.js-play-playlist').removeClass('play').removeClass('js-play-playlist').addClass('pause js-pause');
-                        } else {
-                            $channel.find('.js-pause').removeClass('pause').removeClass('js-pause').addClass('play js-play-playlist');
+                            $channel.find('.js-current-song').html(current[current.length - 1]);
+                            $channel.find('.js-current-song-full').html(items[i].Current);
+                            $channel.find('.js-playlist').html('Плейлист #' + items[i].PlaylistId);
+                            $channel.data('playlist', items[i].PlaylistId);
+
+                            if (parseInt(items[i].IsPlaying)) {
+                                $channel.find('.js-play-playlist').removeClass('play').removeClass('js-play-playlist').addClass('pause js-pause');
+                            } else {
+                                $channel.find('.js-pause').removeClass('pause').removeClass('js-pause').addClass('play js-play-playlist');
+                            }
                         }
                     }
-
                 }
             }
             setTimeout(function () {
@@ -115,6 +114,62 @@ $(function () {
         });
     }
 
+    function getChannels() {
+
+        $.post('/ajax/multiroom/channels', {}, function (items) {
+            if (items) {
+                items = $.parseJSON(items);
+                if (items) {
+                    for (var i = 0; i < items.length; i++) {
+                            var $channel = $('.js-room-' + items[i].Channel);
+                            $channel.find('.js-volume').css('width', (items[i].Volume * 100) + '%');
+
+                    }
+                }
+            }
+            setTimeout(function () {
+                getChannels()
+            }, 1000);
+        });
+    }
+
+    function base64_decode( data ) {	// Decodes data encoded with MIME base64
+        //
+        // +   original by: Tyler Akins (http://rumkin.com)
+
+
+        var b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+        var o1, o2, o3, h1, h2, h3, h4, bits, i=0, enc='';
+
+        do {  // unpack four hexets into three octets using index points in b64
+            h1 = b64.indexOf(data.charAt(i++));
+            h2 = b64.indexOf(data.charAt(i++));
+            h3 = b64.indexOf(data.charAt(i++));
+            h4 = b64.indexOf(data.charAt(i++));
+
+            bits = h1<<18 | h2<<12 | h3<<6 | h4;
+
+            o1 = bits>>16 & 0xff;
+            o2 = bits>>8 & 0xff;
+            o3 = bits & 0xff;
+
+            if (h3 == 64)	  enc += String.fromCharCode(o1);
+            else if (h4 == 64) enc += String.fromCharCode(o1, o2);
+            else			   enc += String.fromCharCode(o1, o2, o3);
+        } while (i < data.length);
+
+        return enc;
+    }
+
+
+
+    function secondsToHms(d) {
+        d = Number(d);
+        var h = Math.floor(d / 3600);
+        var m = Math.floor(d % 3600 / 60);
+        var s = Math.floor(d % 3600 % 60);
+        return ((h > 0 ? h + ":" + (m < 10 ? "0" : "") : "") + m + ":" + (s < 10 ? "0" : "") + s); }
+    getChannels();
     getPlaylists();
 });
 $(function () {

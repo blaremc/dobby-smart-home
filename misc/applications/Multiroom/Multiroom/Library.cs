@@ -75,7 +75,7 @@ namespace Multiroom
             string idmd5;
             foreach (string f in Directory.GetFiles(sDir))
             {
-                if (Path.GetExtension(f) != ".mp3")
+                if (Path.GetExtension(f) != ".mp3" && Path.GetExtension(f) != ".m4a")
                 {
                     continue;
                 }

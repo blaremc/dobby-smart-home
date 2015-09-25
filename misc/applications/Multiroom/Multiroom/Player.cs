@@ -4,333 +4,29 @@ using Un4seen.Bass;
 using System.IO;
 using System.Threading;
 using MySql.Data.MySqlClient;
+using Un4seen.Bass.Misc;
+using Un4seen.Bass.AddOn.Mix;
 namespace Multiroom
 {
 
     struct Stream
     {
-        public int bass_sream;
+        public int mix_sream;
         public float volume;
         public string filename;
 
-        public Stream(int stream)
+        public int stream;
+
+        public Stream(int _stream, int _matrix_stream)
         {
-            bass_sream = stream;
+            mix_sream = _stream;
             volume = 1f;
             filename = "";
-        }
-
-        public void setStream(int stream)
-        {
-            bass_sream = stream;
-        }
-        public void setVolume (float vol)
-        {
-            volume = vol;
-        }
-        public float getVolume()
-        {
-            return volume;
+            stream = _matrix_stream;
         }
     }
 
-    struct Song
-    {
-        public string path;
-        public string name;
-        public int duration;
-        public int order;
-        public int index;
-
-        public Song(string filename, int ord, int ind)
-        {
-            path = filename;
-            name = filename;
-            duration = 0;
-            order = ord;
-            index = ind;
-        }
-
-    }
-
-    class Playlist
-    {
-        private SYNCPROC endSyncProc;
-
-        const int REPEAT_NONE = 0;
-        const int REPEAT_ALL = 1;
-        const int REPEAT_SONG = 2;
-
-        private long id;
-        private string[] _channels;
-        private Dictionary<string, Song> _songs = new Dictionary<string, Song>();
-        private int _stream;
-        private string _current;
-        private int _repeat;
-        private bool _shuffle = false;
-        private string _name;
-        private bool _is_playing = false;
-
-        public Playlist(string[] files, string[] channels)
-        {
-            this._channels = channels;
-            Random rnd = new Random();
-            for (int i = 0; i < files.Length; i++)
-            {
-                int ord = i;
-                if (_shuffle)
-                {
-                    bool find = true;
-                    
-                    while (find)
-                    {
-                        ord = rnd.Next(0, files.Length);
-                        find = false;
-                        foreach (KeyValuePair<string, Song> entry in _songs)
-                        {
-                            if (entry.Value.order == ord)
-                            {
-                                find = true;
-                                break;
-                            }
-                        }
-                        
-                    }
-                }
-                else
-                {
-
-                }
-                this._songs.Add(files[i], new Song(files[i], ord, i));
-            }
-
-            endSyncProc = new SYNCPROC(EndOfFile);
-            
-        }
-        public long getId()
-        {
-            return this.id;
-        }
-
-        public void setId(long id)
-        {
-            this.id = id;
-        }
-
-        public string getName()
-        {
-            return this._name;
-        }
-
-        public string[] getChannels()
-        {
-            return _channels;
-        }
-
-        public string getCurrentSong()
-        {
-            return _current;
-        }
-
-        public bool isPlaying()
-        {
-            return _is_playing;
-        }
-
-        public double getCurrentDuration()
-        {
-            // length in bytes 
-            long len = Bass.BASS_ChannelGetLength(_stream, BASSMode.BASS_POS_BYTES);
-            // the time length 
-            double time = Bass.BASS_ChannelBytes2Seconds(_stream, len);
-            return Math.Round(time, 2);
-        }
-
-        public double getCurrentPosition()
-        {
-            // playback duration 
-            double time = Bass.BASS_ChannelBytes2Seconds(_stream, Bass.BASS_ChannelGetPosition(_stream));
-            return Math.Round(time, 2);
-        }
-       
-
-
-        public void setCurrentPosition(double position)
-        {
-            Bass.BASS_ChannelSetPosition(_stream, position);
-        }
-
-        public bool removeChannels(string[] channels)
-        {
-            bool find = false;
-            for (int i = 0; i < _channels.Length; i++)
-            {
-                for (int j = 0; j < channels.Length; j++)
-                {
-                    if (_channels[i] == channels[j])
-                    {
-                        find = true;
-                        int numIdx = Array.IndexOf(_channels, _channels[i]);
-                        List<string> tmp = new List<string>(_channels);
-                        tmp.RemoveAt(numIdx);
-                        _channels = tmp.ToArray();
-                        i--;
-                        break;
-                    }
-                }
-            }
-            return find;
-        }
-
-
-        public bool stopChannels(string[] channels)
-        {
-            bool find = false;
-            for (int i = 0; i < _channels.Length; i++)
-            {
-                for (int j = 0; j < channels.Length; j++)
-                {
-                    if (_channels[i] == channels[j])
-                    {
-                        Stop();
-                        find = true;
-                    }
-                }
-            }
-            return find;
-        }
-
-
-
-        
-        public bool hasChannels()
-        {
-            return _channels.Length > 0;
-        }
-
-        public bool hasChannels(string[] channels)
-        {
-            bool find = false;
-            for (int i = 0; i < _channels.Length; i++)
-            {
-                for (int j = 0; j < channels.Length; j++)
-                {
-                    if (_channels[i] == channels[j])
-                    {
-                        Stop();
-                    }
-                }
-            }
-            return find;
-        }
-
-        public Dictionary<string, Song> getSongs()
-        {
-            return _songs;
-
-        }
-        public bool getShuffle()
-        {
-            return _shuffle;
-        }
-
-        public int getRepeat()
-        {
-            return _repeat;
-        }
-
-        public void Play(string path = null)
-        {
-            if (path==null && _stream == 0)
-            {
-                return;
-            }
-            if ((_stream == 0 || _current != path) && path != null) {
-                _stream = Player.Play(path, _channels);
-                
-                Multiroom.addLog("Play");
-                Bass.BASS_ChannelSetSync(_stream, BASSSync.BASS_SYNC_END | BASSSync.BASS_SYNC_MIXTIME,
-                    0, endSyncProc, IntPtr.Zero);
-            }
-            else
-            {
-                // Если это воспроизведение того же файла
-                Player.PlayStream(_stream);
-            }
-            this._current = path;
-            _is_playing = true;
-        }
-
-        public void Pause()
-        {
-            if (_stream != 0)
-            {
-                _is_playing = false;
-                Player.PauseStream(_stream);
-            }
-        }
-
-        private void EndOfFile(int syncHandle, int channel, int data, IntPtr user)
-        {
-            Multiroom.addLog("=EndOfFile=");
-            Next();
-        }
-
-        public void Stop()
-        {
-            if (_stream != 0)
-            {
-                _is_playing = false;
-                Player.StopStream(_stream);
-            }
-        }
-
-        public void Next()
-        {
-            int ord = this._songs[this._current].order;
-            foreach (KeyValuePair<string, Song> entry in _songs)
-            {
-                if (entry.Value.order == ord + 1)
-                {
-                    this.Play(entry.Key);
-                    return;
-                }
-            }
-            ord = -1;
-            foreach (KeyValuePair<string, Song> entry in _songs)
-            {
-                if (entry.Value.order == ord + 1)
-                {
-                    this.Play(entry.Key);
-                    return;
-                }
-            }
-        }
-
-        public void Prev()
-        {
-            int ord = this._songs[this._current].order;
-            foreach (KeyValuePair<string, Song> entry in _songs)
-            {
-                if (entry.Value.order == ord - 1)
-                {
-                    this.Play(entry.Key);
-                    return;
-                }
-            }
-
-            ord = _songs.Count - 1;
-            foreach (KeyValuePair<string, Song> entry in _songs)
-            {
-                if (entry.Value.order == ord + 1)
-                {
-                    this.Play(entry.Key);
-                    return;
-                }
-            }
-        }
-    }
-
+   
 
     class Player
     {
@@ -339,7 +35,8 @@ namespace Multiroom
         const byte REAR = 1;
         const byte CENTERBASS = 2;
         const byte SIDE = 3;
-
+        const byte numberOfSpeakers = 4;
+       
         static public Dictionary<int, BASSFlag> bass_channels;
 
         static public Dictionary<int, Stream> streams;
@@ -347,10 +44,12 @@ namespace Multiroom
 
         static private string[] playinfo_channels;
 
+        static public float[,] Matrix;
+
         public static void init()
         {
             Multiroom.addLog("Init bass");
-            if (!Bass.BASS_Init(-1, 44100, BASSInit.BASS_DEVICE_DEFAULT, IntPtr.Zero))
+            if (!Bass.BASS_Init(-1, 44100, BASSInit.BASS_DEVICE_SPEAKERS, IntPtr.Zero))
             {
                 Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_CURVE_VOL, true);
                 Multiroom.addLog("Bass init error " + Bass.BASS_ErrorGetCode());
@@ -368,12 +67,20 @@ namespace Multiroom
             bass_channels.Add(SIDE, BASSFlag.BASS_SPEAKER_REAR2);
 
             streams = new Dictionary<int, Stream>();
-            streams.Add(FRONT, new Stream(0));
-            streams.Add(CENTERBASS, new Stream(0));
-            streams.Add(REAR, new Stream(0));
-            streams.Add(SIDE, new Stream(0));
+            streams.Add(FRONT, new Stream(0, 0));
+            streams.Add(CENTERBASS, new Stream(0, 0));
+            streams.Add(REAR, new Stream(0, 0));
+            streams.Add(SIDE, new Stream(0, 0));
 
-
+            Matrix = new float[8, 2]; 
+            for (int i = 0; i < numberOfSpeakers * 2 ; i+=2)
+            {
+                Matrix[i, 0] = 1f;
+                Matrix[i, 1] = 0;
+                Matrix[i + 1, 1] = 1f;
+                Matrix[i + 1, 0] = 0;
+            }
+            loadChannels();
         }
 
 
@@ -398,9 +105,11 @@ namespace Multiroom
             {
                 for (int i = 0; i < streams.Count; i++)
                 {
-                    if (streams[i].bass_sream == stream)
+                    if (streams[i].stream == stream)
                     {
-                        streams[i].setVolume(value);
+                        Stream st = streams[i];
+                        st.volume = value;
+                        streams[i] = st;
                     }
                 }
             }
@@ -412,9 +121,9 @@ namespace Multiroom
         {
             for (int i = 0; i < channels.Length; i++)
             {
-                if (streams[Convert.ToInt32(channels[i])].bass_sream != 0)
+                if (streams[Convert.ToInt32(channels[i])].mix_sream != 0)
                 {
-                    Player.PlayStream(streams[Convert.ToInt32(channels[i])].bass_sream);
+                    Player.PlayStream(streams[Convert.ToInt32(channels[i])].mix_sream);
                 }
             }
         }
@@ -422,7 +131,7 @@ namespace Multiroom
         {
             for (int i = 0; i < channels.Length; i++)
             {
-                if (streams[Convert.ToInt32(channels[i])].bass_sream != 0)
+                if (streams[Convert.ToInt32(channels[i])].mix_sream != 0)
                 {
                     Player.StopChannel(channels[i]);
                 }
@@ -432,27 +141,54 @@ namespace Multiroom
         public static void StopChannel(string channel)
         {
 
-            Player.StopStream(streams[Convert.ToInt32(channel)].bass_sream);
+            Player.StopStream(streams[Convert.ToInt32(channel)].mix_sream);
         }
 
-        public static void setVolumeChannels(string[] channels, float value, bool not_save = false)
+        public static void setVolumeTemp(string[] channels, float value, bool not_save = false)
         {
             for (int i = 0; i < channels.Length; i++)
             {
-                if (streams[Convert.ToInt32(channels[i])].bass_sream != 0)
+                if (!not_save)
                 {
-                    Player.SetVolumeStream(streams[Convert.ToInt32(channels[i])].bass_sream, value, 1000, not_save);
+                    Stream st = streams[Convert.ToInt32(channels[i])];
+                    st.volume = value;
+                    streams[Convert.ToInt32(channels[i])] = st;
+                }
+                if (streams[Convert.ToInt32(channels[i])].mix_sream != 0)
+                {
+
+                    Player.SetVolumeStream(streams[Convert.ToInt32(channels[i])].mix_sream, value, 1000, not_save);
                 }
             }
+            saveChannels();
         }
+
+        public static void setVolume(string[] channels, float value)
+        {
+            for (int i = 0; i < channels.Length; i++)
+            {
+                Stream st = streams[Convert.ToInt32(channels[i])];
+                st.volume = value;
+                streams[Convert.ToInt32(channels[i])] = st;
+                if (streams[Convert.ToInt32(channels[i])].mix_sream != 0)
+                {
+                    Matrix[Convert.ToInt32(channels[i]) * 2, 0] = value;
+                    Matrix[Convert.ToInt32(channels[i]) * 2 + 1, 1] = value;
+                    BassMix.BASS_Mixer_ChannelSetMatrix(streams[Convert.ToInt32(channels[i])].stream, Matrix);
+                }
+            }
+            saveChannels();
+        }
+
+
 
         public static void restoreVolumeChannels(string[] channels)
         {
             for (int i = 0; i < channels.Length; i++)
             {
-                if (streams[Convert.ToInt32(channels[i])].bass_sream != 0)
+                if (streams[Convert.ToInt32(channels[i])].mix_sream != 0)
                 {
-                    Player.SetVolumeStream(streams[Convert.ToInt32(channels[i])].bass_sream, streams[Convert.ToInt32(channels[i])].getVolume());
+                    Player.SetVolumeStream(streams[Convert.ToInt32(channels[i])].mix_sream, streams[Convert.ToInt32(channels[i])].volume);
                 }
             }
         }
@@ -504,38 +240,64 @@ namespace Multiroom
         }
 
 
-        public static int Play(string filename, string[] channels)
+        public static Stream CreateStream(string filename, string[] channels)
         {
+            Stream result = new Stream(0, 0);
             BASSFlag flags = 0;
             for (int i = 0; i < channels.Length; i++)
             {
                 flags = flags | bass_channels[Convert.ToInt32(channels[i])];
             }
 
-            int stream = Bass.BASS_StreamCreateFile(filename, 0L, 0L, flags);
+            int stream = Bass.BASS_StreamCreateFile(filename, 0L, 0L, BASSFlag.BASS_SAMPLE_FLOAT | BASSFlag.BASS_STREAM_DECODE /* | BASSFlag.BASS_SAMPLE_MONO*/);
+
+            if (stream == 0)
+            {
+                return result;
+            }
+            BASS_CHANNELINFO iam = Bass.BASS_ChannelGetInfo(stream);
+
+            int outputMixerStream = BassMix.BASS_Mixer_StreamCreate(iam.freq, 2, BASSFlag.BASS_SAMPLE_FLOAT | BASSFlag.BASS_MIXER_NONSTOP);
+            BassMix.BASS_Mixer_StreamAddChannel(outputMixerStream, stream, BASSFlag.BASS_MIXER_MATRIX);
+            int Channel = BassMix.BASS_Split_StreamCreate(outputMixerStream, BASSFlag.BASS_SAMPLE_FLOAT | flags, null);
+            BassMix.BASS_Mixer_ChannelSetMatrix(stream, Matrix);
+
             for (int i = 0; i < channels.Length; i++)
             {
-                if (streams[Convert.ToInt32(channels[i])].bass_sream != 0)
+                if (streams[Convert.ToInt32(channels[i])].mix_sream != 0)
                 {
                     Player.StopChannel(channels[i]);
                 }
                 Stream st = streams[Convert.ToInt32(channels[i])];
-                st.bass_sream = stream;
+                st.mix_sream = outputMixerStream;
+                st.stream = stream;
                 streams[Convert.ToInt32(channels[i])] = st;
+                result = st;
+
             }
-            if (stream != 0)
+            return result;
+        }
+
+
+        public static Stream Play(string filename, string[] channels)
+        {
+
+            Stream result = CreateStream(filename, channels);
+            if (result.mix_sream != 0)
             {
-                Player.PlayStream(stream);
-                return stream;
+                //BassMix.BASS_Mixer_ChannelPlay(outputMixerStream);
+                Player.PlayStream(result.mix_sream);
+                return result;
             }
             else
             {
                 // error creating the stream 
                 Multiroom.addLog("Stream error: " + Bass.BASS_ErrorGetCode());
                // throw new Exception("Error " + Bass.BASS_ErrorGetCode());
-                return 0;
+                return result;
             }
         }
+
 
 
         public static void PlayInfo(string filename, string[] channels) {
@@ -548,7 +310,7 @@ namespace Multiroom
                 flags = flags | bass_channels[Convert.ToInt32(channels[i])];
             }
             SYNCPROC _mySync = new SYNCPROC(EndPlayInfo);
-            Player.setVolumeChannels(playinfo_channels, 0f, true);
+            Player.setVolumeTemp(playinfo_channels, 0f, true);
             Thread.Sleep(1000);
             //Player.StopChannels(channels);
 
@@ -576,9 +338,43 @@ namespace Multiroom
           
         }
 
-        public static void SetPosition(double position, int channel)
+        public static void saveChannels()
         {
+            MySqlCommand command_truncate = Database.instance().command("TRUNCATE TABLE channels");
+            command_truncate.Prepare();
+            command_truncate.ExecuteNonQuery();
 
+            MySqlCommand command = Database.instance().command("INSERT INTO channels(speaker, volume) VALUES(@speaker, @volume)");
+            command.Prepare();
+            command.Parameters.AddWithValue("@speaker", null);
+            command.Parameters.AddWithValue("@volume", null);
+            foreach (KeyValuePair<int, Stream> entry in streams)
+            {
+                command.Parameters["@speaker"].Value = entry.Key;
+                command.Parameters["@volume"].Value = entry.Value.volume;
+                command.ExecuteNonQuery();
+            }
+           
+
+        }
+
+        public static void loadChannels()
+        {
+            MySqlCommand command = Database.instance().command("SELECT speaker, volume FROM channels");
+            MySqlDataReader reader = command.ExecuteReader();
+            int i = 0;
+            List<string> result = new List<string>();
+            while (reader.Read())
+            {
+                int channel = Convert.ToInt32(String.Format("{0}", reader[0]));
+                float vol = (float)Convert.ToDouble(String.Format("{0}", reader[1]));
+                Stream st = streams[channel];
+                st.volume = vol;
+                streams[channel] = st;
+                Matrix[channel*2, 0] = vol;
+                Matrix[channel*2 + 1, 1] = vol;
+            }
+            reader.Close();
         }
     }
 }

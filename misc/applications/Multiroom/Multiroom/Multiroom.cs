@@ -21,11 +21,8 @@ namespace Multiroom
         public Multiroom()
         {
             CultureInfo.DefaultThreadCurrentCulture = new System.Globalization.CultureInfo("en-US");
-            Player.init();
-
-
             Database.instance().connect(ConfigurationSettings.AppSettings["mysql"]);
-
+            Player.init();
             Multiroom.addLog("Init mysql");
 
             Multiroom.addLog("Mysql connected");
@@ -90,7 +87,7 @@ namespace Multiroom
                         {
                             return Stop(str);
                         }
-                         str = HttpUtility.ParseQueryString(message).Get("playlist");
+                        str = HttpUtility.ParseQueryString(message).Get("playlist");
                         if (str != null)
                         {
                             return StopPlaylist(str);
@@ -101,12 +98,16 @@ namespace Multiroom
                         return Say(HttpUtility.ParseQueryString(message).Get("text"), HttpUtility.ParseQueryString(message).Get("channels"));
                     case "getplaylists":
                         return GetPlayLists();
+                    case "getchannels":
+                        return GetChannels();
+
+
                     case "position":
                         return SetPosition(HttpUtility.ParseQueryString(message).Get("position"), HttpUtility.ParseQueryString(message).Get("playlist"));
                     case "next":
-                        return Next(HttpUtility.ParseQueryString(message).Get("playlist")); 
+                        return Next(HttpUtility.ParseQueryString(message).Get("playlist"));
                     case "prev":
-                        return Prev(HttpUtility.ParseQueryString(message).Get("playlist")); 
+                        return Prev(HttpUtility.ParseQueryString(message).Get("playlist"));
                     case "setvolume":
                         return SetVolume(HttpUtility.ParseQueryString(message).Get("volume"), HttpUtility.ParseQueryString(message).Get("channels"));
                 }
@@ -214,6 +215,7 @@ namespace Multiroom
             Dictionary<string, string> dic;
             for (int i = 0; i < list.Count; i++)
             {
+                var bytes = Encoding.UTF8.GetBytes(list[i].getCurrentSong());
                 dic = new Dictionary<string, string>();
                 dic.Add("PlaylistId", list[i].getId().ToString());
                 dic.Add("Channels", string.Join(",", list[i].getChannels().Select(x => x.ToString()).ToArray()));
@@ -221,7 +223,7 @@ namespace Multiroom
                 dic.Add("IsPlaying", list[i].isPlaying() ? "1" : "0");
                 dic.Add("Duration", list[i].getCurrentDuration().ToString());
                 dic.Add("Position", list[i].getCurrentPosition().ToString());
-              //  dic.Add("Volume", list[i].getVolume().ToString());
+                //  dic.Add("Volume", list[i].getVolume().ToString());
                 res.Add(dic);
             }
 
@@ -230,6 +232,23 @@ namespace Multiroom
             return json;
         }
 
+        public string GetChannels()
+        {
+
+            List<Dictionary<string, string>> res = new List<Dictionary<string, string>>();
+            Dictionary<string, string> dic;
+            for (int i = 0; i < Player.streams.Count; i++)
+            {
+                dic = new Dictionary<string, string>();
+                dic.Add("Channel", i.ToString());
+                dic.Add("Volume", Player.streams[i].volume.ToString());
+                res.Add(dic);
+            }
+
+            string json = JsonConvert.SerializeObject(res);
+
+            return json;
+        }
 
         public string SetPosition(string position, string playlist)
         {
@@ -256,7 +275,7 @@ namespace Multiroom
         public string SetVolume(string volume, string channels)
         {
             string[] chs = explode(",", channels);
-            Player.setVolumeChannels(chs, (float)Convert.ToDouble(volume));
+            Player.setVolume(chs, (float)Convert.ToDouble(volume));
             return "OK";
         }
 
