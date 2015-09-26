@@ -83,7 +83,6 @@ class Module {
      * Save module to DB
      */
     private function _save() {
-
         Database::instance()->prepare('UPDATE modules SET data=:data, last_date = NOW() WHERE id_modules=:id')->bindValue(':id', $this->_module['id_modules'])->bindValue(':data', json_encode($this->_module['data']))->execute();
     }
 
@@ -107,6 +106,16 @@ class Module {
         }
     }
 
+    public function setValue($key, $value) {
+
+        $this->_module['data']['_value' . $key] = $value;
+        $this->_save();
+    }
+
+
+    public function getValue($key) {
+        return isset($this->_module['data']['_value' . $key]) ? $this->_module['data']['_value' . $key] : null;
+    }
 
     /**
      * Return values
@@ -149,9 +158,11 @@ class Module {
     public static function copyImg() {
         $destDir = DOCROOT . '/assets/img/';
         foreach (Dobby::$modules as $module) {
-            $files =  self::getFiles(MODPATH_DOBBY . '/' . $module['id'] . '/img/', '', '*');
+            $files = self::getFiles(MODPATH_DOBBY . '/' . $module['id'] . '/img/', '', '*');
             foreach ($files as $file) {
-                copy(MODPATH_DOBBY . '/' . $module['id'] . '/img/' . $file, $destDir . $file);
+                if (!file_exists($destDir . $file)) {
+                    copy(MODPATH_DOBBY . '/' . $module['id'] . '/img/' . $file, $destDir . $file);
+                }
             }
         }
 

@@ -42,9 +42,7 @@ namespace Multiroom
         static public Dictionary<int, Stream> streams;
         static public List<Playlist> playlists = new List<Playlist>();
 
-        static private string[] playinfo_channels;
-
-        static public float[,] Matrix;
+        static private Dictionary<int, string[]> playinfos = new Dictionary<int, string[]>();
 
         public static void init()
         {
@@ -72,14 +70,7 @@ namespace Multiroom
             streams.Add(REAR, new Stream(0, 0));
             streams.Add(SIDE, new Stream(0, 0));
 
-            Matrix = new float[8, 2]; 
-            for (int i = 0; i < numberOfSpeakers * 2 ; i+=2)
-            {
-                Matrix[i, 0] = 1f;
-                Matrix[i, 1] = 0;
-                Matrix[i + 1, 1] = 1f;
-                Matrix[i + 1, 0] = 0;
-            }
+            
             loadChannels();
         }
 
@@ -172,9 +163,7 @@ namespace Multiroom
                 streams[Convert.ToInt32(channels[i])] = st;
                 if (streams[Convert.ToInt32(channels[i])].mix_sream != 0)
                 {
-                    Matrix[Convert.ToInt32(channels[i]) * 2, 0] = value;
-                    Matrix[Convert.ToInt32(channels[i]) * 2 + 1, 1] = value;
-                    BassMix.BASS_Mixer_ChannelSetMatrix(streams[Convert.ToInt32(channels[i])].stream, Matrix);
+                    Player.SetVolumeStream(streams[Convert.ToInt32(channels[i])].mix_sream, value, 500, false);
                 }
             }
             saveChannels();
@@ -242,40 +231,32 @@ namespace Multiroom
 
         public static Stream CreateStream(string filename, string[] channels)
         {
-            Stream result = new Stream(0, 0);
-            BASSFlag flags = 0;
-            for (int i = 0; i < channels.Length; i++)
-            {
-                flags = flags | bass_channels[Convert.ToInt32(channels[i])];
-            }
-
+            Stream res = new Stream(0,0);
             int stream = Bass.BASS_StreamCreateFile(filename, 0L, 0L, BASSFlag.BASS_SAMPLE_FLOAT | BASSFlag.BASS_STREAM_DECODE /* | BASSFlag.BASS_SAMPLE_MONO*/);
 
             if (stream == 0)
             {
-                return result;
+                return res;
             }
-            BASS_CHANNELINFO iam = Bass.BASS_ChannelGetInfo(stream);
-
-            int outputMixerStream = BassMix.BASS_Mixer_StreamCreate(iam.freq, 2, BASSFlag.BASS_SAMPLE_FLOAT | BASSFlag.BASS_MIXER_NONSTOP);
-            BassMix.BASS_Mixer_StreamAddChannel(outputMixerStream, stream, BASSFlag.BASS_MIXER_MATRIX);
-            int Channel = BassMix.BASS_Split_StreamCreate(outputMixerStream, BASSFlag.BASS_SAMPLE_FLOAT | flags, null);
-            BassMix.BASS_Mixer_ChannelSetMatrix(stream, Matrix);
 
             for (int i = 0; i < channels.Length; i++)
             {
+                int Channel = BassMix.BASS_Split_StreamCreate(stream, BASSFlag.BASS_SAMPLE_FLOAT | bass_channels[Convert.ToInt32(channels[i])], null); ;
+                
                 if (streams[Convert.ToInt32(channels[i])].mix_sream != 0)
                 {
                     Player.StopChannel(channels[i]);
                 }
-                Stream st = streams[Convert.ToInt32(channels[i])];
-                st.mix_sream = outputMixerStream;
+                int temp = Convert.ToInt32(channels[i]);
+                Stream st = streams[temp];
+                st.mix_sream = Channel;
                 st.stream = stream;
-                streams[Convert.ToInt32(channels[i])] = st;
-                result = st;
+                streams[temp] = st;
+                res = st;
+                Player.SetVolumeStream(streams[temp].mix_sream, streams[temp].volume, 1);
 
             }
-            return result;
+            return res;
         }
 
 
@@ -286,7 +267,10 @@ namespace Multiroom
             if (result.mix_sream != 0)
             {
                 //BassMix.BASS_Mixer_ChannelPlay(outputMixerStream);
-                Player.PlayStream(result.mix_sream);
+                for (int i = 0; i < channels.Length; i++)
+                {
+                    Player.PlayStream(streams[Convert.ToInt32(channels[i])].mix_sream);
+                }
                 return result;
             }
             else
@@ -302,24 +286,23 @@ namespace Multiroom
 
         public static void PlayInfo(string filename, string[] channels) {
 
-
-            playinfo_channels = channels;
-            BASSFlag flags = 0;
-            for (int i = 0; i < channels.Length; i++)
-            {
-                flags = flags | bass_channels[Convert.ToInt32(channels[i])];
-            }
             SYNCPROC _mySync = new SYNCPROC(EndPlayInfo);
-            Player.setVolumeTemp(playinfo_channels, 0f, true);
+            Player.setVolumeTemp(channels, 0f, true);
             Thread.Sleep(1000);
-            //Player.StopChannels(channels);
 
-            int stream = Bass.BASS_StreamCreateFile(@filename, 0L, 0L, flags);
+            int stream = Bass.BASS_StreamCreateFile(@filename, 0L, 0L, BASSFlag.BASS_SAMPLE_FLOAT | BASSFlag.BASS_STREAM_DECODE /* | BASSFlag.BASS_SAMPLE_MONO*/);
+            playinfos[stream] = channels;
             if (stream != 0)
             {
                 Bass.BASS_ChannelSetSync(stream, BASSSync.BASS_SYNC_END | BASSSync.BASS_SYNC_MIXTIME,
                        0, _mySync, IntPtr.Zero);
-                Player.PlayStream(stream);
+
+                for (int i = 0; i < channels.Length; i++)
+                {
+                    int Channel = BassMix.BASS_Split_StreamCreate(stream, BASSFlag.BASS_SAMPLE_FLOAT | bass_channels[Convert.ToInt32(channels[i])], null);
+                    Player.SetVolumeStream(Channel, streams[Convert.ToInt32(channels[i])].volume, 1);
+                    Player.PlayStream(Channel);
+                }
             }
             else
             {
@@ -333,9 +316,8 @@ namespace Multiroom
         private static void EndPlayInfo(int handle, int channel, int data, IntPtr user)
         {
             // the 'channel' has ended - jump to the beginning
-            //Player.PlayChannels(playinfo_channels);
-            Player.restoreVolumeChannels(playinfo_channels);
-          
+            Player.restoreVolumeChannels(playinfos[channel]);
+            playinfos.Remove(handle);
         }
 
         public static void saveChannels()
@@ -371,8 +353,6 @@ namespace Multiroom
                 Stream st = streams[channel];
                 st.volume = vol;
                 streams[channel] = st;
-                Matrix[channel*2, 0] = vol;
-                Matrix[channel*2 + 1, 1] = vol;
             }
             reader.Close();
         }

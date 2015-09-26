@@ -75,6 +75,11 @@ $(function () {
         $.post('/ajax/multiroom/next', {playlist: $(e.target).closest('.js-room').data('playlist')});
     });
 
+    $(document).on('click', '.js-select-voice', function (e) {
+        e.preventDefault();
+        $.post('/ajax/multiroom/setvoice', {name: $(e.target).data('name')});
+    });
+
     function getPlaylists() {
 
         $.post('/ajax/multiroom/playlists', {}, function (items) {

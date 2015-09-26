@@ -95,13 +95,11 @@ namespace Multiroom
                         return "unknown";
 
                     case "say":
-                        return Say(HttpUtility.ParseQueryString(message).Get("text"), HttpUtility.ParseQueryString(message).Get("channels"));
+                        return Say(HttpUtility.ParseQueryString(message).Get("text"), HttpUtility.ParseQueryString(message).Get("channels"), HttpUtility.ParseQueryString(message).Get("voice"));
                     case "getplaylists":
                         return GetPlayLists();
                     case "getchannels":
                         return GetChannels();
-
-
                     case "position":
                         return SetPosition(HttpUtility.ParseQueryString(message).Get("position"), HttpUtility.ParseQueryString(message).Get("playlist"));
                     case "next":
@@ -110,6 +108,8 @@ namespace Multiroom
                         return Prev(HttpUtility.ParseQueryString(message).Get("playlist"));
                     case "setvolume":
                         return SetVolume(HttpUtility.ParseQueryString(message).Get("volume"), HttpUtility.ParseQueryString(message).Get("channels"));
+                    case "getvoices":
+                        return GetVoices();
                 }
             }
             catch (Exception ex)
@@ -178,7 +178,7 @@ namespace Multiroom
         }
 
 
-        public string Say(string text, string channels)
+        public string Say(string text, string channels, string voice)
         {
 
 
@@ -191,7 +191,7 @@ namespace Multiroom
 
                 // Configure the audio output. 
                 synth.SetOutputToWaveFile(filename);
-
+                synth.SelectVoice(voice);
                 // Build a prompt.
                 PromptBuilder builder = new PromptBuilder();
                 builder.AppendText(text);
@@ -215,7 +215,6 @@ namespace Multiroom
             Dictionary<string, string> dic;
             for (int i = 0; i < list.Count; i++)
             {
-                var bytes = Encoding.UTF8.GetBytes(list[i].getCurrentSong());
                 dic = new Dictionary<string, string>();
                 dic.Add("PlaylistId", list[i].getId().ToString());
                 dic.Add("Channels", string.Join(",", list[i].getChannels().Select(x => x.ToString()).ToArray()));
@@ -223,7 +222,6 @@ namespace Multiroom
                 dic.Add("IsPlaying", list[i].isPlaying() ? "1" : "0");
                 dic.Add("Duration", list[i].getCurrentDuration().ToString());
                 dic.Add("Position", list[i].getCurrentPosition().ToString());
-                //  dic.Add("Volume", list[i].getVolume().ToString());
                 res.Add(dic);
             }
 
@@ -292,6 +290,51 @@ namespace Multiroom
             return "OK";
         }
 
+        public string GetVoices()
+        {
+            List<Dictionary<string, string>> res = new List<Dictionary<string, string>>();
+            Dictionary<string, string> dic;
+            using (SpeechSynthesizer synth = new SpeechSynthesizer())
+            {
+
+                // Output information about all of the installed voices. 
+                foreach (InstalledVoice voice in synth.GetInstalledVoices())
+                {
+                    VoiceInfo info = voice.VoiceInfo;
+                    string AudioFormats = "";
+                    foreach (SpeechAudioFormatInfo fmt in info.SupportedAudioFormats)
+                    {
+                        AudioFormats += String.Format("{0}\n",
+                        fmt.EncodingFormat.ToString());
+                    }
+                    dic = new Dictionary<string, string>();
+                    dic.Add("Name", info.Name);
+                    dic.Add("Culture", info.Culture.ToString());
+                    dic.Add("Age", info.Age.ToString());
+                    dic.Add("Gender", info.Gender.ToString());
+                    dic.Add("Description", info.Description);
+                    dic.Add("Id", info.Id);
+                    dic.Add("Enabled", voice.Enabled.ToString());
+                    if (info.SupportedAudioFormats.Count != 0)
+                    {
+                        dic.Add("Formats", AudioFormats);
+                    }
+                    else
+                    {
+                        dic.Add("Formats", "No");
+                    }
+                    res.Add(dic);
+                }
+
+            }
+            string json = JsonConvert.SerializeObject(res);
+            return json;
+        }
+
+        public string setVoice()
+        {
+            return "OK";
+        }
 
         /// <summary>
         /// 

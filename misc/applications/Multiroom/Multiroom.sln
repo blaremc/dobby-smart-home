@@ -5,6 +5,12 @@ VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Multiroom", "Multiroom\Multiroom.csproj", "{AF54C780-9B94-46D3-BD93-2E9B3DC98E8B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VkApiRunner", "Multiroom\vknet\VkApiRunner\VkApiRunner.csproj", "{4C9E8D81-3E14-47B7-BEA9-05A08E7F4570}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Injector", "Multiroom\vknet\Injector\Injector.csproj", "{55CE9C2A-50CB-43A2-9A9E-BD99D3F89D76}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{D5B8E410-42D6-43BD-B253-B45A227493EF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,8 +21,20 @@ Global
 		{AF54C780-9B94-46D3-BD93-2E9B3DC98E8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF54C780-9B94-46D3-BD93-2E9B3DC98E8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF54C780-9B94-46D3-BD93-2E9B3DC98E8B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C9E8D81-3E14-47B7-BEA9-05A08E7F4570}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C9E8D81-3E14-47B7-BEA9-05A08E7F4570}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C9E8D81-3E14-47B7-BEA9-05A08E7F4570}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C9E8D81-3E14-47B7-BEA9-05A08E7F4570}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55CE9C2A-50CB-43A2-9A9E-BD99D3F89D76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55CE9C2A-50CB-43A2-9A9E-BD99D3F89D76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55CE9C2A-50CB-43A2-9A9E-BD99D3F89D76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55CE9C2A-50CB-43A2-9A9E-BD99D3F89D76}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4C9E8D81-3E14-47B7-BEA9-05A08E7F4570} = {D5B8E410-42D6-43BD-B253-B45A227493EF}
+		{55CE9C2A-50CB-43A2-9A9E-BD99D3F89D76} = {D5B8E410-42D6-43BD-B253-B45A227493EF}
 	EndGlobalSection
 EndGlobal

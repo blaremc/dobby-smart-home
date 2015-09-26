@@ -15,5 +15,13 @@ abstract class Dobby_Module {
         $this->init($data);
     }
 
+    public function setValue($key, $value) {
+        Module::instance(self::NAME)->setValue($key, $value);
+    }
+
+    public function getValue($key) {
+        Module::instance(self::NAME)->getValue($key);
+    }
+
     abstract public function init($data);
 }

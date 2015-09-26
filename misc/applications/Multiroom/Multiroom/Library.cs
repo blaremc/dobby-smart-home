@@ -67,8 +67,6 @@ namespace Multiroom
         }
 
 
-
-
         private static int TreeScan(string sDir, string parent, int level, MySqlCommand insertcommand, MySqlCommand updatecommand, MySqlCommand selectscancommand)
         {
             int count = 0;

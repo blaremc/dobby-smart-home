@@ -38,7 +38,6 @@ namespace Multiroom
         private long id;
         private string[] _channels;
         private Dictionary<string, Song> _songs = new Dictionary<string, Song>();
-        private Stream _stream;
         private string _current;
         private int _repeat;
         private bool _shuffle = false;
@@ -111,27 +110,57 @@ namespace Multiroom
             return _is_playing;
         }
 
+        public Stream getFirstStream()
+        {
+            Stream stream = new Stream(0,0);
+            for (int i = 0; i < _channels.Length; i++)
+            {
+                stream = Player.streams[Convert.ToInt32(_channels[i])];
+                return stream;
+            }
+            return stream;
+        }
+
         public double getCurrentDuration()
         {
-            // length in bytes 
-            long len = Bass.BASS_ChannelGetLength(_stream.stream, BASSMode.BASS_POS_BYTES);
-            // the time length 
-            double time = Bass.BASS_ChannelBytes2Seconds(_stream.stream, len);
-            return Math.Round(time, 2);
+            Stream stream = getFirstStream();
+            if (stream.stream != 0)
+            {
+                // length in bytes 
+                long len = Bass.BASS_ChannelGetLength(stream.stream, BASSMode.BASS_POS_BYTES);
+                // the time length 
+                double time = Bass.BASS_ChannelBytes2Seconds(stream.stream, len);
+                return Math.Round(time, 2);
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         public double getCurrentPosition()
         {
-            // playback duration 
-            double time = Bass.BASS_ChannelBytes2Seconds(_stream.stream, Bass.BASS_ChannelGetPosition(_stream.stream));
-            return Math.Round(time, 2);
+            Stream stream = getFirstStream();
+            if (stream.stream != 0)
+            {
+                // playback duration 
+                double time = Bass.BASS_ChannelBytes2Seconds(stream.stream, Bass.BASS_ChannelGetPosition(stream.stream));
+                return Math.Round(time, 2);
+            }
+            else
+            {
+                return 0;
+            }
         }
 
 
 
         public void setCurrentPosition(double position)
         {
-            Bass.BASS_ChannelSetPosition(_stream.stream, position);
+            for (int i = 0; i < _channels.Length; i++)
+            {
+                Bass.BASS_ChannelSetPosition(Player.streams[Convert.ToInt32(_channels[i])].stream, position);
+            }
         }
 
         public bool removeChannels(string[] channels)
@@ -215,41 +244,46 @@ namespace Multiroom
 
         public void Play(string path = null, bool play = true)
         {
-            if (path == null && _stream.mix_sream == 0)
+
+            Stream stream = getFirstStream();
+            if (path == null && stream.stream == 0)
             {
                 return;
             }
-            if ((_stream.mix_sream == 0 || _current != path) && path != null)
+            if ((stream.stream == 0 || _current != path) && path != null)
             {
                 if (play)
                 {
-                    _stream = Player.Play(path, _channels);
+                    Player.Play(path, _channels);
                     _is_playing = true;
                 }
                 else
                 {
-                    _stream = Player.CreateStream(path, _channels); 
+                    Player.CreateStream(path, _channels); 
                 }
-
-                Bass.BASS_ChannelSetSync(_stream.stream, BASSSync.BASS_SYNC_END | BASSSync.BASS_SYNC_MIXTIME,
+                stream = getFirstStream();
+                Bass.BASS_ChannelSetSync(stream.stream, BASSSync.BASS_SYNC_END | BASSSync.BASS_SYNC_MIXTIME,
                     0, endSyncProc, IntPtr.Zero);
                 this._current = path;
             }
             else
             {
-                // Если это воспроизведение того же файла
-                Player.PlayStream(_stream.mix_sream);
-                _is_playing = true;
+                for (int i = 0; i < _channels.Length; i++)
+                {
+                    // Если это воспроизведение того же файла
+                    Player.PlayStream(Player.streams[Convert.ToInt32(_channels[i])].mix_sream);
+                    _is_playing = true;
+                }
             }
            
         }
 
         public void Pause()
         {
-            if (_stream.mix_sream != 0)
+            for (int i = 0; i < _channels.Length; i++)
             {
                 _is_playing = false;
-                Player.PauseStream(_stream.mix_sream);
+                Player.PauseStream(Player.streams[Convert.ToInt32(_channels[i])].mix_sream);
             }
         }
 
@@ -260,11 +294,11 @@ namespace Multiroom
 
         public void Stop()
         {
-            if (_stream.mix_sream != 0)
+            for (int i = 0; i < _channels.Length; i++)
             {
                 _is_playing = false;
-                Player.StopStream(_stream.mix_sream);
-                Bass.BASS_ChannelSetPosition(_stream.stream, 0);
+                Player.StopStream(Player.streams[Convert.ToInt32(_channels[i])].mix_sream);
+                Bass.BASS_ChannelSetPosition(Player.streams[Convert.ToInt32(_channels[i])].mix_sream, 0);
             }
         }
 
