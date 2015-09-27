@@ -3,40 +3,20 @@
 class Scenario_Living extends Dobby_Scenario {
 
 
-    public $events = array(
-        'LivingMotion' => EventBus::DEVICE_CHANGE,
-        'LivingLight' => EventBus::DEVICE_CHANGE,
-        'LivingIRReceiver' => EventBus::DEVICE_CHANGE,
-        'KitchenMotion' => Array(EventBus::DEVICE_CHANGE, EventBus::TIME),
-        'KitchenLight' => EventBus::DEVICE_CHANGE,
-    );
+    public $events = array('LivingMotion' => EventBus::DEVICE_CHANGE, 'LivingLight' => EventBus::DEVICE_CHANGE, 'LivingIRReceiver' => EventBus::DEVICE_CHANGE, 'KitchenMotion' => Array(EventBus::DEVICE_CHANGE, EventBus::TIME), 'KitchenLight' => EventBus::DEVICE_CHANGE, 'LivingIR' => Array(EventBus::DEVICE_CHANGE, EventBus::TIME),);
 
     /**
      * Default params value
      *
      * @var array
      */
-    public $params = array(
-        'name' => 'setLight',
-        'center_color' => null,
-        'border_color' => null,
-        'center_border_color' => null,
-        'enable_main_light' => 0,
-        'enable_window_light' => 0,
+    public $params = array('name' => 'setLight', 'center_color' => null, 'border_color' => null, 'center_border_color' => null, 'enable_main_light' => 0, 'enable_window_light' => 0,
 
     );
 
-    public $fields = array(
-        'name' => array('type' => array('setLight'), 'caption' => 'Операция'),
-        'center_color' => array('type' => 'color', 'caption' => 'Цвет центральной люстры'),
-        'center_border_color' => array('type' => 'color', 'caption' => 'Цвет центральной ниш'),
-        'border_color' => array('type' => 'color', 'caption' => 'Цвет ниш у стен'),
-        'enable_main_light' => array('type' => 'bool', 'caption' => 'Включен главный свет на кухне'),
-        'enable_window_light' => array('type' => 'bool', 'caption' => 'Включены рабочий свет на кухне'),
-    );
+    public $fields = array('name' => array('type' => array('setLight'), 'caption' => 'Операция'), 'center_color' => array('type' => 'color', 'caption' => 'Цвет центральной люстры'), 'center_border_color' => array('type' => 'color', 'caption' => 'Цвет центральной ниш'), 'border_color' => array('type' => 'color', 'caption' => 'Цвет ниш у стен'), 'enable_main_light' => array('type' => 'bool', 'caption' => 'Включен главный свет на кухне'), 'enable_window_light' => array('type' => 'bool', 'caption' => 'Включены рабочий свет на кухне'),);
 
-    protected $delays = array(
-        'kitchen_window_light' => 120, // Максимальная задержка при входе на кухню в секундах
+    protected $delays = array('kitchen_window_light' => 120, // Максимальная задержка при входе на кухню в секундах
         'kitchen_window_light_min' => 10 // Задержка подсветки кухни при входе в гостинную
     );
 
@@ -51,7 +31,9 @@ class Scenario_Living extends Dobby_Scenario {
     public function cancel() {
         $this->set('is_execute', false);
 
+
     }
+
 
     /**
      * @param $event
@@ -75,17 +57,37 @@ class Scenario_Living extends Dobby_Scenario {
                     $this->checkOff();
                 }
                 break;
+            case 'LivingIR':
+                if ($event == EventBus::DEVICE_CHANGE) {
+                    $this->recieveIR();
+                } else {
+                    $this->checkRotateColor();
+
+                }
+                break;
+        }
+    }
+
+
+    protected function recieveIR() {
+        $value = $this->device('BedroomIR')->last_value;
+        $arr = explode('_', $value);
+        $this->silence = false;
+        if (count($arr) == 3) {
+            $value = $arr[0] . '_' . $arr[1];
+            $this->silence = $arr[2] == '1';
+        } else {
+            $value = implode('_', $arr);
+        }
+        if ($value == '1_1597106199') {
+            $this->enableRotateColor();
+        } else {
+            $this->disableRotateColor();
         }
     }
 
     public function status($params) {
-        return array(
-            'center_color' => $this->get('center_color'),
-            'border_color' => $this->get('border_color'),
-            'center_border_color' => $this->get('center_border_color'),
-            'enable_main_light' => $this->get('enable_main_light'),
-            'enable_window_light' => $this->get('enable_window_light'),
-        );
+        return array('center_color' => $this->get('center_color'), 'border_color' => $this->get('border_color'), 'center_border_color' => $this->get('center_border_color'), 'enable_main_light' => $this->get('enable_main_light'), 'enable_window_light' => $this->get('enable_window_light'),);
     }
 
 
@@ -164,7 +166,7 @@ class Scenario_Living extends Dobby_Scenario {
         $profile = Schedule::getCurrentProfile();
         if ($this->get('enable_window_light_user') != '1') {
             if ($this->device('KitchenMotion')->last_value == '1') {
-                Dobby::$log->add('Detected move in kitchen light '.$this->device('KitchenLight')->last_value);
+                Dobby::$log->add('Detected move in kitchen light ' . $this->device('KitchenLight')->last_value);
 
                 if ($this->device('KitchenLight')->last_value < 400) {
                     Dobby::$log->add('Turn on light');
@@ -179,7 +181,7 @@ class Scenario_Living extends Dobby_Scenario {
                 $this->set('kitchen_window_light_times', time() + $this->delays['kitchen_window_light']);
                 $this->set('kitchen_window_light_timer', '1');
                 $this->saveData();
-                Dobby::$log->add('Time for light off '.date('H:i:s',$this->get('kitchen_window_light_times')));
+                Dobby::$log->add('Time for light off ' . date('H:i:s', $this->get('kitchen_window_light_times')));
             }
         }
     }
@@ -191,7 +193,7 @@ class Scenario_Living extends Dobby_Scenario {
                     Dobby::$log->add('Detected move in living room, turn on light in Kitchen');
                     $this->device('LivingLeds2')->setValue('3:100:100:100:50');
                     $this->set('enable_window_light', '1');
-                    $this->set('kitchen_window_light_times',  time() + $this->delays['kitchen_window_light_min']);
+                    $this->set('kitchen_window_light_times', time() + $this->delays['kitchen_window_light_min']);
                     $this->set('kitchen_window_light_timer', '1');
                     $this->saveData();
                 }
@@ -217,5 +219,31 @@ class Scenario_Living extends Dobby_Scenario {
         }
     }
 
+    protected function enableRotateColor() {
+        $this->set('time_color_switch', time() - 100);
+        $this->set('enable_color_switch', '1');
+        $this->checkRotateColor();
+    }
 
+    protected function disableRotateColor() {
+        $this->set('enable_color_switch', '0');
+        Dobby::$log->add('Rotate color OFF in Kitchen');
+    }
+
+    protected function checkRotateColor() {
+        if ($this->get('enable_color_switch') == '1') {
+
+            if ($this->get('time_color_switch') <= time()) {
+                $rgb = array();
+                for ($i = 0; $i < 3; $i++) {
+                    $rand = rand(1, 3);
+                    $rgb[$rand] = rand(0, 255);
+                }
+                $time = rand(30, 300);
+                $this->device('LivingLeds2')->setValue('1:' . $rgb[0] . ':' . $rgb[1] . ':' . $rgb[2] . ':' . $time);
+                $this->set('time_color_switch', time() + rand(3, 12));
+                Dobby::$log->add('Change color to ' . dechex($rgb[0]) . dechex($rgb[1]) . dechex($rgb[2]) . 'in Kitchen');
+            }
+        }
+    }
 }

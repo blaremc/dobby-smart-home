@@ -40,7 +40,7 @@ namespace Multiroom
         private Dictionary<string, Song> _songs = new Dictionary<string, Song>();
         private string _current;
         private int _repeat;
-        private bool _shuffle = false;
+        private bool _shuffle = true;
         private string _name;
         private bool _is_playing = false;
 

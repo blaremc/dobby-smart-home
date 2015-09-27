@@ -25,6 +25,10 @@ class Controller_Ajax_Ircommand extends Controller_Ajax {
                 echo "ir2 1_1597049079 setLed:1:247:119:40:20:|:setLed:2:255:184:18:20:|:setLed:5:53:143:232:20\n";
                 echo "ir2 1_1597059279 setLed:1:232:53:220:20:|:setLed:2:51:190:245:20:|:setLed:5:255:204:0:20\n";
                 echo "ir2 1_1597051119 setLed:1:255:235:171:20:|:setLed:2:204:255:102:20:|:setLed:5:181:102:255:20\n";
+
+
+                echo "ir2 1_1597104159 setLed:1:255:255:255:20:|:setLed:2:255:255:255:20:|:setLed:5:255:255:255:20\n";
+
                 break;
         }
 

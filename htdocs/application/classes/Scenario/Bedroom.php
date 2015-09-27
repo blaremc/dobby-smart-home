@@ -58,6 +58,7 @@ class Scenario_Bedroom extends Dobby_Scenario {
                 break;
 
         }
+
     }
 
     public function status($params) {
