@@ -115,8 +115,13 @@ namespace Multiroom
             Stream stream = new Stream(0,0);
             for (int i = 0; i < _channels.Length; i++)
             {
-                stream = Player.streams[Convert.ToInt32(_channels[i])];
-                return stream;
+                try {
+                    stream = Player.streams[Convert.ToInt32(_channels[i])];
+                    return stream;
+                }catch (Exception e)
+                {
+
+                }
             }
             return stream;
         }
